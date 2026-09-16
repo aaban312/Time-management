@@ -106,10 +106,18 @@
   .file-row input[type="file"]{flex:1;min-width:220px;background:var(--surface)}
   .smart-controls{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:end}
   .smart-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
-  .task-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding-top:2px}
-  .task-controls label{display:flex;align-items:center;gap:6px}
-  .priority-input{width:82px}
-  .status-select{width:auto;min-width:110px}
+  .task-controls{display:flex;gap:5px;align-items:center;flex-wrap:nowrap;padding-top:2px;overflow-x:auto;scrollbar-width:none}
+  .task-controls::-webkit-scrollbar{display:none}
+  .task-controls label{display:flex;align-items:center;gap:3px;flex:0 0 auto}
+  .priority-input{width:58px;padding:5px 6px;text-align:center}
+  .status-select{width:auto;min-width:92px;padding:5px 6px}
+  .icon-btn{width:34px;min-width:34px;height:34px;min-height:34px!important;padding:0!important;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;font-size:16px;line-height:1;flex:0 0 34px}
+  .task-toolbar{display:flex;align-items:center;gap:5px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-top:3px}
+  .task-toolbar::-webkit-scrollbar{display:none}
+  .task-toolbar .priority-input{width:58px;min-width:58px}
+  .task-toolbar .status-select{min-width:92px;max-width:104px}
+  .task-toolbar .compact-label{display:flex;align-items:center;gap:3px;flex:0 0 auto;font-size:11px;color:var(--muted)}
+  .task-toolbar button,.task-toolbar input,.task-toolbar select{min-height:34px!important;font-size:13px}
   .range-list{display:flex;flex-wrap:wrap;gap:4px 7px;margin-top:2px}
   .range-chip{background:var(--surface-2);border:1px solid var(--border);padding:3px 6px;border-radius:999px;font-size:12px;color:var(--muted)}
   .changed-time{color:var(--accent);font-weight:600}
@@ -141,14 +149,12 @@
     .full{grid-column:1}
     .row.mobile-stack{flex-direction:column;align-items:stretch}
     .row.mobile-stack>*{width:100%}
-    .task{flex-direction:column;align-items:stretch}
-    .task .meta{width:100%;align-items:stretch}
-    .task .meta .title-row{flex-direction:column;align-items:flex-start;gap:4px}
-    .task>.actions{display:grid;grid-template-columns:1fr 1fr;width:100%}
-    .task>.actions button{width:100%}
-    .box-header{flex-direction:column;align-items:stretch}
-    .box-header>.actions{display:grid;grid-template-columns:1fr 1fr;width:100%}
-    .box-header>.actions button{width:100%}
+    .task{flex-direction:column;align-items:stretch;padding:8px}
+    .task .meta{width:100%;align-items:stretch;gap:5px}
+    .task .meta .title-row{flex-direction:column;align-items:flex-start;gap:2px}
+    .box{padding:8px;margin:7px 0}
+    .box-header{flex-direction:column;align-items:stretch;margin-bottom:5px}
+    .task-toolbar{width:100%}
     .box-subtask>div{flex-direction:column!important;align-items:stretch}
     .box-subtask .actions{display:grid;grid-template-columns:1fr 1fr;width:100%;margin-top:8px}
     .box-subtask .actions button{width:100%}
@@ -162,12 +168,15 @@
     .file-row input[type="file"]{min-width:0}
     .toast{left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));max-width:none}
     .smart-actions{grid-template-columns:1fr 1fr}
-    .task-controls{display:grid;grid-template-columns:1fr 1fr;align-items:end}
-    .task-controls label{display:flex;flex-direction:column;align-items:stretch}
-    .priority-input,.status-select{width:100%}
+    .task-controls{display:flex;grid-template-columns:none;align-items:center;flex-wrap:nowrap}
+    .task-controls label{display:flex;flex-direction:row;align-items:center}
+    .priority-input{width:58px!important}
+    .status-select{width:auto!important;min-width:92px}
+    .task-toolbar button,.task-toolbar input,.task-toolbar select{font-size:13px;min-height:32px!important}
+    .icon-btn{width:32px;min-width:32px;height:32px;min-height:32px!important;flex-basis:32px}
   }
   @media (max-width:390px){
-    .profile-select,.program-actions,.task>.actions,.box-header>.actions,.box-subtask .actions,.smart-actions{grid-template-columns:1fr}
+    .profile-select,.program-actions,.box-subtask .actions,.smart-actions{grid-template-columns:1fr}
   }
 </style>
 </head>
@@ -300,13 +309,25 @@
   </div>
 </div>
 
+<div id="deleteTaskModal" style="display:none" class="modal-overlay">
+  <div class="modal">
+    <div style="font-weight:800;font-size:18px;margin-bottom:8px">Delete task</div>
+    <div id="deleteTaskMessage" class="small muted" style="margin-bottom:14px">Choose how this task should be deleted.</div>
+    <div style="display:grid;grid-template-columns:1fr;gap:8px">
+      <button id="deleteTaskOnly" class="danger">🗑️ Delete</button>
+      <button id="deleteTaskShift" class="warning">Delete &amp; shift later tasks</button>
+      <button id="deleteTaskCancel" class="ghost">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <div id="settingsModal" style="display:none" class="modal-overlay">
   <div class="modal">
     <div style="font-weight:800;font-size:18px;margin-bottom:12px">Settings</div>
     <div class="settings-grid">
       <label class="field">Interface scale
         <div class="row">
-          <input id="uiScale" type="range" min="70" max="130" step="5" style="flex:1" />
+          <input id="uiScale" type="range" min="10" max="130" step="5" style="flex:1" />
           <span id="uiScaleValue" class="badge">90%</span>
         </div>
       </label>
@@ -371,6 +392,7 @@
   let activeProfileId = null;
   let scheduledTimers = [];
   let pendingSmartPlan = null;
+  let pendingDeleteTaskId = null;
 
   function uid(){ return Math.floor(Math.random()*1e9).toString(36) + Date.now().toString(36) }
   function now(){ return Date.now() }
@@ -421,7 +443,8 @@
     noteDate:document.getElementById('noteDate'), noteText:document.getElementById('noteText'), addNote:document.getElementById('addNote'), notesList:document.getElementById('notesList'),
     programSelect:document.getElementById('programSelect'), programDate:document.getElementById('programDate'), programApplyMode:document.getElementById('programApplyMode'), programSummary:document.getElementById('programSummary'), applyProgram:document.getElementById('applyProgram'), saveProgramFromDay:document.getElementById('saveProgramFromDay'), deleteProgram:document.getElementById('deleteProgram'), exportProgram:document.getElementById('exportProgram'), programCsvFile:document.getElementById('programCsvFile'), importProgramCsv:document.getElementById('importProgramCsv'),
     settingsModal:document.getElementById('settingsModal'), uiScale:document.getElementById('uiScale'), uiScaleValue:document.getElementById('uiScaleValue'), appearanceSelect:document.getElementById('appearanceSelect'), defaultDayEnd:document.getElementById('defaultDayEnd'), themeSelect:document.getElementById('themeSelect'), settingsClose:document.getElementById('settingsClose'), resetSettings:document.getElementById('resetSettings'),
-    smartPreviewModal:document.getElementById('smartPreviewModal'), smartPreviewStats:document.getElementById('smartPreviewStats'), smartPreviewList:document.getElementById('smartPreviewList'), smartPreviewWarning:document.getElementById('smartPreviewWarning'), smartPreviewCancel:document.getElementById('smartPreviewCancel'), smartPreviewApply:document.getElementById('smartPreviewApply')
+    smartPreviewModal:document.getElementById('smartPreviewModal'), smartPreviewStats:document.getElementById('smartPreviewStats'), smartPreviewList:document.getElementById('smartPreviewList'), smartPreviewWarning:document.getElementById('smartPreviewWarning'), smartPreviewCancel:document.getElementById('smartPreviewCancel'), smartPreviewApply:document.getElementById('smartPreviewApply'),
+    deleteTaskModal:document.getElementById('deleteTaskModal'), deleteTaskMessage:document.getElementById('deleteTaskMessage'), deleteTaskOnly:document.getElementById('deleteTaskOnly'), deleteTaskShift:document.getElementById('deleteTaskShift'), deleteTaskCancel:document.getElementById('deleteTaskCancel')
   };
 
   // ----------------------------
@@ -435,7 +458,7 @@
   function saveSettings(s){ localStorage.setItem(SETTINGS_KEY,JSON.stringify(s)); applySettings(s) }
   function resolvedMode(appearance){ if(appearance==='dark'||appearance==='light')return appearance; return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light' }
   function applySettings(s){
-    const scale=clamp(Number(s.scale)||DEFAULT_UI_SCALE,70,130);
+    const scale=clamp(Number(s.scale)||DEFAULT_UI_SCALE,10,130);
     document.documentElement.style.setProperty('--ui-scale',String(scale/100));
     document.documentElement.dataset.theme=s.theme||'ocean';
     document.documentElement.dataset.mode=resolvedMode(s.appearance||'system');
@@ -561,10 +584,25 @@
   function statusLabel(status){return status==='done'?'Done':status==='skipped'?'Skipped':'Pending'}
   function statusClass(status){return status==='done'?'done':status==='skipped'?'skipped':''}
   function makeTaskControls(t){
-    const wrap=document.createElement('div');wrap.className='task-controls';
-    const pLabel=document.createElement('label');pLabel.className='small';pLabel.textContent='Priority';const p=document.createElement('input');p.type='number';p.min='10';p.max='500';p.step='10';p.value=String(t.priority||100);p.className='priority-input';p.onchange=()=>updateTaskPriority(t.id,p.value);pLabel.appendChild(p);
-    const sLabel=document.createElement('label');sLabel.className='small';sLabel.textContent='Status';const sel=document.createElement('select');sel.className='status-select';[['pending','Pending'],['done','Done'],['skipped','Skipped']].forEach(([v,l])=>{const o=document.createElement('option');o.value=v;o.textContent=l;sel.appendChild(o)});sel.value=t.status||'pending';sel.onchange=()=>setTaskStatus(t.id,sel.value);sLabel.appendChild(sel);
-    wrap.append(pLabel,sLabel);return wrap;
+    const wrap=document.createElement('div');wrap.className='task-toolbar';
+
+    const pLabel=document.createElement('label');pLabel.className='compact-label';pLabel.title='Priority (%)';
+    const pTag=document.createElement('span');pTag.textContent='P';
+    const p=document.createElement('input');p.type='number';p.min='10';p.max='500';p.step='10';p.value=String(t.priority||100);p.className='priority-input';p.setAttribute('aria-label','Priority percent');p.onchange=()=>updateTaskPriority(t.id,p.value);
+    pLabel.append(pTag,p);
+
+    const sel=document.createElement('select');sel.className='status-select';sel.title='Status';sel.setAttribute('aria-label','Task status');
+    [['pending','Pending'],['done','Done'],['skipped','Skipped']].forEach(([v,l])=>{const o=document.createElement('option');o.value=v;o.textContent=l;sel.appendChild(o)});
+    sel.value=t.status||'pending';sel.onchange=()=>setTaskStatus(t.id,sel.value);
+
+    if(t.isBox){
+      const add=document.createElement('button');add.className='ghost icon-btn';add.textContent='＋';add.title='Add subtask';add.setAttribute('aria-label','Add subtask');add.onclick=()=>openSubtaskModalForBox(t.id,t.start,t.end);wrap.appendChild(add);
+    }
+    const pin=document.createElement('button');pin.className='pin icon-btn';pin.textContent=t.pinned?'🔒':'🔓';pin.title=t.pinned?'Unlock task':'Lock task';pin.setAttribute('aria-label',pin.title);pin.onclick=()=>togglePin(t.id);
+    const edit=document.createElement('button');edit.className='ghost icon-btn';edit.textContent='⚙️';edit.title='Edit task';edit.setAttribute('aria-label','Edit task');edit.onclick=()=>openEditModal(t.id);
+    const del=document.createElement('button');del.className='danger icon-btn';del.textContent='🗑️';del.title='Delete task';del.setAttribute('aria-label','Delete task');del.onclick=()=>deleteTaskWithOptions(t.id);
+    wrap.append(pLabel,sel,pin,edit,del);
+    return wrap;
   }
   function makeRangeChips(t){const segs=getSegments(t);if(segs.length<=1)return null;const w=document.createElement('div');w.className='range-list';segs.forEach(s=>{const c=document.createElement('span');c.className='range-chip';c.textContent=`${fmtTime(s.start)}–${fmtTime(s.end)}`;w.appendChild(c)});return w}
   function render(){
@@ -574,13 +612,27 @@
     top.forEach(t=>{
       const currentDur=taskDuration(t),orig=Number(t.originalDurationMs)||currentDur;const changed=Math.abs(currentDur-orig)>30000;
       if(t.isBox){
-        const box=document.createElement('div');box.className='box '+statusClass(t.status);box.dataset.id=t.id;const header=document.createElement('div');header.className='box-header';const left=document.createElement('div');left.style.flex='1';
-        left.innerHTML=`<div style="font-weight:700">${escapeHtml(t.title)} ${t.pinned?'🔒':''} <span class="badge ${statusClass(t.status)}">${statusLabel(t.status)}</span></div><div class="small muted">${escapeHtml(rangeText(t))}</div>${changed?`<div class="tiny changed-time">Original ${fmtDuration(orig)} → Current ${fmtDuration(currentDur)}</div>`:''}`;
+        const box=document.createElement('div');box.className='box '+statusClass(t.status);box.dataset.id=t.id;
+        const header=document.createElement('div');header.className='box-header';
+        const left=document.createElement('div');left.style.flex='1';
+        left.innerHTML=`<div style="font-weight:700">${escapeHtml(t.title)} ${t.pinned?'🔒':''}</div><div class="small muted">${escapeHtml(rangeText(t))}</div>${changed?`<div class="tiny changed-time">Original ${fmtDuration(orig)} → Current ${fmtDuration(currentDur)}</div>`:''}`;
         const chips=makeRangeChips(t);if(chips)left.appendChild(chips);left.appendChild(makeTaskControls(t));
-        const right=document.createElement('div');right.className='actions';const addSub=document.createElement('button');addSub.className='ghost';addSub.textContent='Add subtask';addSub.onclick=()=>openSubtaskModalForBox(t.id,t.start,t.end);const pin=document.createElement('button');pin.className='pin';pin.textContent=t.pinned?'Unpin':'Pin';pin.onclick=()=>togglePin(t.id);const edit=document.createElement('button');edit.className='ghost';edit.textContent='Edit';edit.onclick=()=>openEditModal(t.id);const del=document.createElement('button');del.className='danger';del.textContent='Delete';del.onclick=()=>deleteTaskWithOptions(t.id);right.append(addSub,pin,edit,del);header.append(left,right);box.appendChild(header);
-        tasks.filter(x=>x.parentId===t.id).sort((a,b)=>taskFirstStart(a)-taskFirstStart(b)).forEach(s=>{const d=document.createElement('div');d.className='box-subtask';d.innerHTML=`<div style="display:flex;justify-content:space-between;gap:8px"><div><strong>${escapeHtml(s.title)}</strong><div class="small muted">${escapeHtml(rangeText(s))}</div></div><div class="actions"><button class="edit-btn ghost">Edit</button><button class="danger del-btn">Delete</button></div></div>`;d.querySelector('.edit-btn').onclick=()=>openEditModal(s.id);d.querySelector('.del-btn').onclick=()=>deleteTaskWithOptions(s.id);box.appendChild(d)});els.timeline.appendChild(box);
+        header.appendChild(left);box.appendChild(header);
+        tasks.filter(x=>x.parentId===t.id).sort((a,b)=>taskFirstStart(a)-taskFirstStart(b)).forEach(s=>{
+          const d=document.createElement('div');d.className='box-subtask';
+          const row=document.createElement('div');row.style.display='flex';row.style.justifyContent='space-between';row.style.gap='8px';row.style.alignItems='center';
+          const info=document.createElement('div');info.style.minWidth='0';info.style.flex='1';info.innerHTML=`<strong>${escapeHtml(s.title)}</strong><div class="small muted">${escapeHtml(rangeText(s))}</div>`;
+          const actions=document.createElement('div');actions.className='actions';actions.style.flexWrap='nowrap';
+          const edit=document.createElement('button');edit.className='ghost icon-btn';edit.textContent='⚙️';edit.title='Edit subtask';edit.onclick=()=>openEditModal(s.id);
+          const del=document.createElement('button');del.className='danger icon-btn';del.textContent='🗑️';del.title='Delete subtask';del.onclick=()=>deleteTaskWithOptions(s.id);
+          actions.append(edit,del);row.append(info,actions);d.appendChild(row);box.appendChild(d);
+        });
+        els.timeline.appendChild(box);
       }else{
-        const el=document.createElement('div');el.className='task '+statusClass(t.status);el.dataset.id=t.id;const left=document.createElement('div');left.className='meta';left.innerHTML=`<div class="title-row"><div style="font-weight:700">${escapeHtml(t.title)} ${t.pinned?'🔒':''} <span class="badge ${statusClass(t.status)}">${statusLabel(t.status)}</span></div><div class="small muted">${escapeHtml(rangeText(t))}</div></div>${changed?`<div class="tiny changed-time">Original ${fmtDuration(orig)} → Current ${fmtDuration(currentDur)}</div>`:''}`;const chips=makeRangeChips(t);if(chips)left.appendChild(chips);left.appendChild(makeTaskControls(t));const right=document.createElement('div');right.className='actions';const pin=document.createElement('button');pin.className='pin';pin.textContent=t.pinned?'Unpin':'Pin';pin.onclick=()=>togglePin(t.id);const edit=document.createElement('button');edit.className='ghost';edit.textContent='Edit';edit.onclick=()=>openEditModal(t.id);const del=document.createElement('button');del.className='danger';del.textContent='Delete';del.onclick=()=>deleteTaskWithOptions(t.id);right.append(pin,edit,del);el.append(left,right);els.timeline.appendChild(el);
+        const el=document.createElement('div');el.className='task '+statusClass(t.status);el.dataset.id=t.id;
+        const left=document.createElement('div');left.className='meta';
+        left.innerHTML=`<div class="title-row"><div style="font-weight:700">${escapeHtml(t.title)} ${t.pinned?'🔒':''}</div><div class="small muted">${escapeHtml(rangeText(t))}</div></div>${changed?`<div class="tiny changed-time">Original ${fmtDuration(orig)} → Current ${fmtDuration(currentDur)}</div>`:''}`;
+        const chips=makeRangeChips(t);if(chips)left.appendChild(chips);left.appendChild(makeTaskControls(t));el.appendChild(left);els.timeline.appendChild(el);
       }
     });
   }
@@ -594,8 +646,30 @@
     saveTasks(activeProfileId,tasks);els.title.value='';els.start.value='';els.end.value='';els.insertAfter.value='';els.makeBox.checked=false;els.newTaskPriority.value='100';
   }
   function deleteTaskWithOptions(id){
-    if(!activeProfileId)return;let tasks=normalizeTasks(loadTasks(activeProfileId));const removed=tasks.find(t=>t.id===id);if(!removed){alert('Not found');return}const keep=confirm('Delete this task?\n\nOK: delete and keep other times unchanged.\nCancel: delete and shift later main tasks earlier by this task duration.');const removedDur=taskDuration(removed),top=tasks.filter(t=>!t.parentId).sort((a,b)=>taskFirstStart(a)-taskFirstStart(b)),idx=top.findIndex(t=>t.id===id),later=idx>=0?new Set(top.slice(idx+1).map(t=>t.id)):new Set();tasks=tasks.filter(t=>t.id!==id&&t.parentId!==id);if(!keep&&idx>=0){for(const t of tasks){if(t.pinned)continue;if(later.has(t.id)||(t.parentId&&later.has(t.parentId)))shiftTask(t,-removedDur)}}saveTasks(activeProfileId,tasks)
+    if(!activeProfileId)return;
+    const tasks=normalizeTasks(loadTasks(activeProfileId));
+    const removed=tasks.find(t=>t.id===id);
+    if(!removed){alert('Not found');return}
+    pendingDeleteTaskId=id;
+    els.deleteTaskMessage.textContent=`“${removed.title}” — choose Delete, Delete & shift, or Cancel.`;
+    const isMain=!removed.parentId;
+    els.deleteTaskShift.disabled=!isMain;
+    els.deleteTaskShift.title=isMain?'Delete and move later unlocked tasks earlier':'Shift is only available for main tasks';
+    els.deleteTaskModal.style.display='flex';
   }
+  function closeDeleteTaskModal(){pendingDeleteTaskId=null;els.deleteTaskModal.style.display='none'}
+  function commitDeleteTask(shiftLater){
+    const id=pendingDeleteTaskId;if(!id||!activeProfileId){closeDeleteTaskModal();return}
+    let tasks=normalizeTasks(loadTasks(activeProfileId));const removed=tasks.find(t=>t.id===id);if(!removed){closeDeleteTaskModal();return}
+    const removedDur=taskDuration(removed),top=tasks.filter(t=>!t.parentId).sort((a,b)=>taskFirstStart(a)-taskFirstStart(b)),idx=top.findIndex(t=>t.id===id),later=idx>=0?new Set(top.slice(idx+1).map(t=>t.id)):new Set();
+    tasks=tasks.filter(t=>t.id!==id&&t.parentId!==id);
+    if(shiftLater&&idx>=0){for(const t of tasks){if(t.pinned)continue;if(later.has(t.id)||(t.parentId&&later.has(t.parentId)))shiftTask(t,-removedDur)}}
+    closeDeleteTaskModal();saveTasks(activeProfileId,tasks);showToast(shiftLater?'Deleted and shifted later tasks':'Deleted');
+  }
+  els.deleteTaskOnly.onclick=()=>commitDeleteTask(false);
+  els.deleteTaskShift.onclick=()=>commitDeleteTask(true);
+  els.deleteTaskCancel.onclick=closeDeleteTaskModal;
+  els.deleteTaskModal.addEventListener('click',e=>{if(e.target===els.deleteTaskModal)closeDeleteTaskModal()});
   function deleteAll(){if(!activeProfileId||!confirm('Clear all tasks for this profile?'))return;localStorage.setItem(keyForProfile(activeProfileId),'[]');saveUndoStack(activeProfileId,[]);render();scheduleNotifications()}
   function openEditModal(id){const tasks=normalizeTasks(loadTasks(activeProfileId)),t=tasks.find(x=>x.id===id);if(!t){alert('Task not found');return}const modal=document.getElementById('editModal'),ms=document.getElementById('modalStart'),me=document.getElementById('modalEnd'),mp=document.getElementById('modalPriority');modal.style.display='flex';ms.value=toInputLocal(t.start);me.value=toInputLocal(t.end);mp.value=t.priority||100;document.getElementById('modalSave').onclick=()=>{const ns=parseDT(ms.value),ne=parseDT(me.value);if(!ns||!ne||ne<=ns){alert('Invalid times');return}t.start=ns;t.end=ne;t.segments=[{start:ns,end:ne}];t.priority=clamp(Number(mp.value)||100,10,500);if(!t.originalDurationMs)t.originalDurationMs=ne-ns;saveTasks(activeProfileId,tasks);modal.style.display='none'};document.getElementById('modalCancel').onclick=()=>modal.style.display='none'}
   function openSubtaskModalForBox(boxId,defaultStart,defaultEnd){const modal=document.getElementById('subtaskModal');modal.style.display='flex';document.getElementById('subtaskTitle').value='';document.getElementById('subtaskStart').value=toInputLocal(defaultStart||Date.now());document.getElementById('subtaskEnd').value=toInputLocal(defaultEnd||((defaultStart||Date.now())+30*60000));document.getElementById('subtaskSave').onclick=()=>{const title=document.getElementById('subtaskTitle').value.trim(),s=parseDT(document.getElementById('subtaskStart').value),e=parseDT(document.getElementById('subtaskEnd').value);if(!title){alert('Title required');return}if(!s||!e||e<=s){alert('Invalid times');return}const tasks=normalizeTasks(loadTasks(activeProfileId));tasks.push({id:uid(),title,start:s,end:e,segments:[{start:s,end:e}],pinned:false,isBox:false,parentId:boxId,priority:100,status:'pending',originalDurationMs:e-s});saveTasks(activeProfileId,tasks);modal.style.display='none'};document.getElementById('subtaskCancel').onclick=()=>modal.style.display='none'}
