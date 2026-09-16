@@ -1,59 +1,134 @@
-<!doctype html><!--TEsttttttttttt-->
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Timeline Scheduler — Profiles, Boxes & Native Timer (Fixed)</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Timeline Scheduler — Mobile, Programs & CSV</title>
 <meta name="theme-color" content="#2563eb"/>
 <style>
-  :root{font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;line-height:1.35}
-  body{max-width:980px;margin:18px auto;padding:18px;background:#f7f8fb;color:#111;border-radius:10px;box-shadow:0 6px 18px rgba(11,22,40,0.06)}
+  :root{
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,sans-serif;
+    line-height:1.35;
+    color-scheme:light;
+  }
+  *{box-sizing:border-box}
+  html,body{max-width:100%;overflow-x:hidden}
+  body{
+    max-width:980px;
+    margin:18px auto;
+    padding:18px;
+    background:#f7f8fb;
+    color:#111;
+    border-radius:10px;
+    box-shadow:0 6px 18px rgba(11,22,40,0.06);
+    min-height:100dvh;
+  }
   header{display:flex;align-items:center;justify-content:space-between;gap:12px}
   h1{margin:0 0 6px;font-size:20px}
+  h2{font-size:18px}
   .row{display:flex;gap:8px;align-items:center}
-  input,button,textarea,select{font-size:14px;padding:8px;border:1px solid #d6e1f0;border-radius:6px;background:white}
-  button{cursor:pointer;background:#2563eb;color:white;border:none}
+  input,button,textarea,select{
+    font:inherit;
+    font-size:14px;
+    padding:8px;
+    border:1px solid #d6e1f0;
+    border-radius:8px;
+    background:white;
+    max-width:100%;
+  }
+  input,select,textarea{color:#111}
+  button{cursor:pointer;background:#2563eb;color:white;border:none;min-height:40px}
   button.ghost{background:transparent;color:#374151;border:1px solid #e6e9f2}
+  button.danger{background:#ef4444;color:white}
+  button.secondary{background:#4b5563}
+  button:disabled{opacity:.55;cursor:not-allowed}
   .controls{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 18px}
-  .task{background:white;padding:10px;border-radius:8px;margin:8px 0;display:flex;align-items:flex-start;justify-content:space-between;border:1px solid #eef2ff}
-  .task .meta{display:flex;gap:12px;align-items:center;flex-direction:column}
+  .card{background:#fff;padding:12px;border-radius:10px;border:1px solid #eef2ff}
+  .task{background:white;padding:10px;border-radius:8px;margin:8px 0;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;border:1px solid #eef2ff}
+  .task .meta{display:flex;gap:12px;align-items:center;flex-direction:column;flex:1;min-width:0}
   .task .meta .title-row{display:flex;gap:8px;align-items:center;width:100%;justify-content:space-between}
   .small{font-size:13px;color:#6b7280}
   .timeline{margin-top:12px}
   .muted{color:#6b7280}
-  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:center}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:end}
   .full{grid-column:1/-1}
-  .actions{display:flex;gap:6px}
-  .danger{background:#ef4444}
+  .field{display:flex;flex-direction:column;gap:6px;min-width:0}
+  .actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
   footer{margin-top:18px;color:#6b7280;font-size:13px}
-  .toast{position:fixed;right:18px;bottom:18px;background:#111;color:white;padding:10px 14px;border-radius:8px;opacity:0;transform:translateY(10px);transition:all .25s ease;z-index:2100}
+  .toast{position:fixed;right:18px;bottom:18px;background:#111;color:white;padding:10px 14px;border-radius:8px;opacity:0;transform:translateY(10px);transition:all .25s ease;z-index:2100;max-width:min(360px,calc(100vw - 36px))}
   .toast.show{opacity:1;transform:translateY(0)}
-  .note-row{display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid #f0f2f7}
+  .note-row{display:grid;grid-template-columns:auto 120px 1fr auto;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid #f0f2f7}
   .pin{background:#f3e8ff;color:#6b21a8;padding:6px 8px;border-radius:6px;border:none}
   .countdown{font-weight:600}
-  @media (max-width:640px){.form-grid{grid-template-columns:1fr}}
-  /* Box styles */
-  .box { border-left:6px solid #60a5fa; background: linear-gradient(90deg, rgba(96,165,250,0.05), transparent); padding:10px; border-radius:8px; margin:10px 0; }
+  .box{border-left:6px solid #60a5fa;background:linear-gradient(90deg,rgba(96,165,250,0.05),transparent);padding:10px;border-radius:8px;margin:10px 0}
   .box-header{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
   .box-subtask{background:#fff;padding:8px;border-radius:6px;margin:6px 0;border:1px solid #eef2ff}
-  /* profiles */
-  .profile-select{display:flex;gap:6px;align-items:center}
+  .profile-select{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
   .badge{background:#f3f4f6;padding:6px 8px;border-radius:6px;border:1px solid #e6e9f2}
   .open-clock{background:#111;color:white;padding:8px 10px;border-radius:8px}
-  /* modal */
-  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;z-index:2200}
-  .modal{background:#fff;padding:16px;border-radius:10px;min-width:300px;max-width:92%}
-  /* pomodoro left */
-  #tsenh-pomo{position:fixed;left:16px;bottom:16px;z-index:2147483647}
-  /* small note checkbox */
-  .note-checkbox{margin-right:8px}
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;z-index:2200;padding:14px}
+  .modal{background:#fff;padding:16px;border-radius:12px;width:min(430px,100%);max-height:90dvh;overflow:auto}
+  #tsenh-pomo{position:fixed;left:16px;bottom:max(16px,env(safe-area-inset-bottom));z-index:2147483647}
+  .note-checkbox{margin-right:2px}
+  .program-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;align-items:end}
+  .program-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .program-actions button{flex:1 1 150px}
+  .program-summary{margin-top:8px;padding:8px 10px;border-radius:8px;background:#f8fafc;border:1px solid #eef2ff}
+  .file-row{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
+  .file-row input[type="file"]{flex:1;min-width:220px;background:#fff}
+  hr{border:none;border-top:1px solid #e5e7eb;margin:16px 0}
+
+  @media (max-width:700px){
+    body{
+      margin:0;
+      padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) calc(86px + env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));
+      border-radius:0;
+      box-shadow:none;
+    }
+    header{flex-direction:column;align-items:stretch}
+    h1{font-size:19px}
+    .profile-select{display:grid;grid-template-columns:1fr 1fr;gap:8px;justify-content:stretch}
+    .profile-select label,.profile-select #profileSelect,.profile-select #openClock{grid-column:1/-1}
+    .profile-select button{width:100%}
+    input,button,textarea,select{font-size:16px;min-height:44px}
+    .form-grid,.program-grid{grid-template-columns:1fr}
+    .full{grid-column:1}
+    .row.mobile-stack{flex-direction:column;align-items:stretch}
+    .row.mobile-stack>*{width:100%}
+    .task{flex-direction:column;align-items:stretch}
+    .task .meta{width:100%;align-items:stretch}
+    .task .meta .title-row{flex-direction:column;align-items:flex-start;gap:4px}
+    .task>.actions{display:grid;grid-template-columns:1fr 1fr;width:100%}
+    .task>.actions button{width:100%}
+    .box-header{flex-direction:column;align-items:stretch}
+    .box-header>.actions{display:grid;grid-template-columns:1fr 1fr;width:100%}
+    .box-header>.actions button{width:100%}
+    .box-subtask>div{flex-direction:column!important;align-items:stretch}
+    .box-subtask .actions{display:grid;grid-template-columns:1fr 1fr;width:100%;margin-top:8px}
+    .box-subtask .actions button{width:100%}
+    .note-row{grid-template-columns:auto 1fr auto}
+    .note-row .note-date{grid-column:2/-1;width:auto!important}
+    .note-row .note-text{grid-column:2/3}
+    .program-actions{display:grid;grid-template-columns:1fr 1fr}
+    .program-actions button{width:100%;min-width:0}
+    .file-row{flex-direction:column;align-items:stretch}
+    .file-row>*{width:100%}
+    .file-row input[type="file"]{min-width:0}
+    .toast{left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));max-width:none}
+    #tsenh-pomo{left:12px;bottom:calc(12px + env(safe-area-inset-bottom))}
+    #tsenh-pomo-menu{left:12px!important;right:12px!important;bottom:calc(72px + env(safe-area-inset-bottom))!important;min-width:0!important}
+  }
+
+  @media (max-width:390px){
+    .profile-select,.program-actions,.task>.actions,.box-header>.actions,.box-subtask .actions{grid-template-columns:1fr}
+  }
 </style>
 </head>
 <body>
 <header>
   <div>
-    <h1>Timeline Scheduler (Profiles & Boxes)</h1>
-    <div class="muted">Profiles, boxed tasks, Google Clock launcher, smarter defaults.</div>
+    <h1>Timeline Scheduler</h1>
+    <div class="muted">Profiles, reusable study programs, boxes, timers & CSV import.</div>
   </div>
   <div class="profile-select">
     <label class="small muted">Profile:</label>
@@ -66,62 +141,96 @@
 </header>
 
 <hr />
-<!---🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟--T O D O--🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟------>
-<section id="notebook" style="background:#fff;padding:12px;border-radius:8px;border:1px solid #eef2ff;margin-bottom:12px">
+
+<section id="notebook" class="card" style="margin-bottom:12px">
   <h2 style="margin:0 0 8px">TO-DO</h2>
-  <div class="row" style="gap:8px">
+  <div class="row mobile-stack" style="gap:8px">
     <input type="date" id="noteDate" />
     <input id="noteText" placeholder="Take quick note..." style="flex:1" />
     <button id="addNote">Add note :)</button>
   </div>
   <div id="notesList" style="margin-top:12px"></div>
 </section>
-<!---🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟--T O D O--🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟🌟------>
-<div style="background:#fff;padding:12px;border-radius:8px;border:1px solid #eef2ff">
+
+<section id="programsPanel" class="card" style="margin-bottom:12px">
+  <h2 style="margin:0 0 4px">Ready Programs</h2>
+  <div class="small muted" style="margin-bottom:10px">Save a day once, then apply the same time structure to any future date.</div>
+
+  <div class="program-grid">
+    <label class="field">Program
+      <select id="programSelect"><option value="">No saved program</option></select>
+    </label>
+    <label class="field">Day
+      <input id="programDate" type="date" />
+    </label>
+    <label class="field">When applying
+      <select id="programApplyMode">
+        <option value="replace">Replace tasks already on that day</option>
+        <option value="append">Add to existing tasks</option>
+      </select>
+    </label>
+  </div>
+
+  <div id="programSummary" class="program-summary small muted">No program selected.</div>
+
+  <div class="program-actions">
+    <button id="applyProgram">Apply to day</button>
+    <button id="saveProgramFromDay" class="secondary">Save this day as program</button>
+    <button id="deleteProgram" class="danger">Delete program</button>
+    <button id="exportProgram" class="ghost">Export selected CSV</button>
+  </div>
+
+  <div class="file-row">
+    <input id="programCsvFile" type="file" accept=".csv,text/csv" />
+    <button id="importProgramCsv" class="ghost">Import CSV program(s)</button>
+  </div>
+  <div class="small muted" style="margin-top:6px">CSV columns: program, id, parent_id, type, title, start, end, pinned</div>
+</section>
+
+<div class="card">
   <div class="form-grid">
-    <label>Title <input id="title" placeholder="Study for math..." /></label>
-    <label>Start <input id="start" type="datetime-local" /></label>
-    <label>End <input id="end" type="datetime-local" /></label>
-    <label class="full">Insert after (optional)
+    <label class="field">Title <input id="title" placeholder="Study for math..." /></label>
+    <label class="field">Start <input id="start" type="datetime-local" /></label>
+    <label class="field">End <input id="end" type="datetime-local" /></label>
+    <label class="field full">Insert after (optional)
       <select id="insertAfter"><option value="">(append at end)</option></select>
     </label>
     <label style="display:flex;gap:8px;align-items:center" class="full">
       <input type="checkbox" id="makeBox" /> Make box (container task)
       <button id="addSubtask" class="ghost" style="margin-left:auto">Add subtask to selected box</button>
     </label>
-    <div class="full row" style="justify-content:flex-end">
+    <div class="full row" style="justify-content:flex-end;flex-wrap:wrap">
       <button id="addBtn">Add task</button>
-      <button id="clearAll" class="ghost" style="margin-left:6px">Clear all</button>
+      <button id="clearAll" class="ghost">Clear all</button>
     </div>
   </div>
 </div>
 
-<div style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-  <label style="display:flex;gap:8px;align-items:center">
-    Delay (minutes):
-    <input id="delay" type="number" min="0" style="width:100px" />
-  </label>
-  <div style="display:flex;gap:6px;align-items:center">
-    <button id="delayAll" class="ghost">Apply to ALL tasks (incl. past)</button>
-    <button id="delayUpcoming">Apply to upcoming (extend running)</button>
+<div class="card" style="margin-top:12px">
+  <div class="row mobile-stack" style="gap:8px;align-items:end">
+    <label class="field" style="flex:1">Delay (minutes)
+      <input id="delay" type="number" min="0" />
+    </label>
+    <button id="delayAll" class="ghost">Apply to ALL tasks</button>
+    <button id="delayUpcoming">Apply to upcoming</button>
   </div>
-  <span class="muted" style="margin-left:8px">Pinned tasks are skipped.</span>
+  <div class="small muted" style="margin-top:6px">Pinned tasks are skipped. Running task is extended when “upcoming” is used.</div>
 </div>
 
 <div class="timeline" id="timeline"></div>
 
-<footer>Tip: Use boxed tasks to group related subtasks (e.g. subject block with internal activities).</footer>
+<footer>Tip: use Ready Programs for repeated study days and Boxes for grouped activities.</footer>
 
 <div id="toast" class="toast"></div>
 
 <div id="editModal" style="display:none" class="modal-overlay">
   <div class="modal">
     <div style="font-weight:700;margin-bottom:8px">Edit task times</div>
-    <label>Start
-      <input id="modalStart" type="datetime-local" style="width:100%;padding:8px;border:1px solid #e6e9f2;border-radius:6px" />
+    <label class="field">Start
+      <input id="modalStart" type="datetime-local" />
     </label>
-    <label>End
-      <input id="modalEnd" type="datetime-local" style="width:100%;padding:8px;border:1px solid #e6e9f2;border-radius:6px" />
+    <label class="field" style="margin-top:8px">End
+      <input id="modalEnd" type="datetime-local" />
     </label>
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
       <button id="modalCancel" class="ghost">Cancel</button>
@@ -133,14 +242,14 @@
 <div id="subtaskModal" style="display:none" class="modal-overlay">
   <div class="modal">
     <div style="font-weight:700;margin-bottom:8px">Add subtask</div>
-    <label>Title
-      <input id="subtaskTitle" type="text" style="width:100%;padding:8px;border:1px solid #e6e9f2;border-radius:6px" />
+    <label class="field">Title
+      <input id="subtaskTitle" type="text" />
     </label>
-    <label>Start
-      <input id="subtaskStart" type="datetime-local" style="width:100%;padding:8px;border:1px solid #e6e9f2;border-radius:6px" />
+    <label class="field" style="margin-top:8px">Start
+      <input id="subtaskStart" type="datetime-local" />
     </label>
-    <label>End
-      <input id="subtaskEnd" type="datetime-local" style="width:100%;padding:8px;border:1px solid #e6e9f2;border-radius:6px" />
+    <label class="field" style="margin-top:8px">End
+      <input id="subtaskEnd" type="datetime-local" />
     </label>
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
       <button id="subtaskCancel" class="ghost">Cancel</button>
@@ -150,7 +259,7 @@
 </div>
 
 <div id="tsenh-pomo">
-  <button id="tsenh-pomo-btn" title="Pomodoro" style="background:#10b981;color:white;border:none;padding:12px;border-radius:50%;box-shadow:0 6px 18px rgba(16,185,129,0.18);font-weight:700">🍅</button>
+  <button id="tsenh-pomo-btn" title="Pomodoro" style="background:#10b981;color:white;border:none;padding:12px;border-radius:50%;box-shadow:0 6px 18px rgba(16,185,129,0.18);font-weight:700;width:52px;height:52px">🍅</button>
   <div id="tsenh-pomo-menu" style="display:none;position:fixed;left:16px;bottom:76px;background:#fff;border:1px solid #e6e9f2;padding:10px;border-radius:8px;box-shadow:0 6px 18px rgba(11,22,40,0.06);min-width:180px">
     <div style="margin-bottom:8px;font-weight:600">Quick timers</div>
     <div style="display:flex;gap:6px;flex-wrap:wrap">
@@ -168,486 +277,833 @@
 
 <script>
 (function(){
-  // ----------------------------
-  // Storage keys and utilities
-  // ----------------------------
   const BASE_KEY = 'timeline_scheduler_v2_profiles';
   const PROFILE_LIST_KEY = 'timeline_scheduler_profiles_list';
-  let profiles = []; // {id,name}
+  let profiles = [];
   let activeProfileId = null;
+  let scheduledTimers = [];
+  let runningCountdown = null;
 
   function uid(){ return Math.floor(Math.random()*1e9).toString(36) + Date.now().toString(36) }
-  function now(){ return Date.now(); }
-  function showToast(msg, t=2200){ const toast = document.getElementById('toast'); if(!toast) return; toast.textContent = msg; toast.classList.add('show'); clearTimeout(toast._h); toast._h=setTimeout(()=>toast.classList.remove('show'),t); }
+  function now(){ return Date.now() }
+  function showToast(msg, t=2200){
+    const toast = document.getElementById('toast');
+    if(!toast) return;
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toast._h);
+    toast._h = setTimeout(()=>toast.classList.remove('show'),t);
+  }
 
   function loadProfiles(){ try{ return JSON.parse(localStorage.getItem(PROFILE_LIST_KEY) || '[]') }catch(e){ return [] } }
-  function saveProfiles(arr){ localStorage.setItem(PROFILE_LIST_KEY, JSON.stringify(arr)); profiles = arr; renderProfileSelect(); }
-
+  function saveProfiles(arr){
+    localStorage.setItem(PROFILE_LIST_KEY, JSON.stringify(arr));
+    profiles = arr;
+    renderProfileSelect();
+  }
   function keyForProfile(pid){ return `${BASE_KEY}::${pid}::tasks` }
   function notesKeyForProfile(pid){ return `${BASE_KEY}::${pid}::notes` }
-
+  function programsKeyForProfile(pid){ return `${BASE_KEY}::${pid}::programs` }
   function loadTasks(pid){ try{ return JSON.parse(localStorage.getItem(keyForProfile(pid)) || '[]') }catch(e){ return [] } }
-  function saveTasks(pid, tasks){ localStorage.setItem(keyForProfile(pid), JSON.stringify(tasks)); render(); showToast('Saved'); scheduleNotifications(); }
   function loadNotes(pid){ try{ return JSON.parse(localStorage.getItem(notesKeyForProfile(pid)) || '[]') }catch(e){ return [] } }
-  function saveNotes(pid, notes){ localStorage.setItem(notesKeyForProfile(pid), JSON.stringify(notes)); renderNotes(); showToast('Notes saved'); }
+  function loadPrograms(pid){ try{ return JSON.parse(localStorage.getItem(programsKeyForProfile(pid)) || '[]') }catch(e){ return [] } }
+  function saveTasks(pid, tasks){
+    localStorage.setItem(keyForProfile(pid), JSON.stringify(tasks));
+    render();
+    showToast('Saved');
+    scheduleNotifications();
+  }
+  function saveNotes(pid, notes){
+    localStorage.setItem(notesKeyForProfile(pid), JSON.stringify(notes));
+    renderNotes();
+    showToast('Notes saved');
+  }
+  function savePrograms(pid, programs, quiet=false){
+    localStorage.setItem(programsKeyForProfile(pid), JSON.stringify(programs));
+    renderPrograms();
+    if(!quiet) showToast('Programs saved');
+  }
 
-  // ----------------------------
-  // Elements
-  // ----------------------------
   const profileSelect = document.getElementById('profileSelect');
   const addProfileBtn = document.getElementById('addProfile');
   const renameProfileBtn = document.getElementById('renameProfile');
   const deleteProfileBtn = document.getElementById('deleteProfile');
   const openClockBtn = document.getElementById('openClock');
-
-  const titleI = document.getElementById('title'), startI = document.getElementById('start'), endI = document.getElementById('end');
-  const addBtn = document.getElementById('addBtn'), timeline = document.getElementById('timeline');
-  const clearAll = document.getElementById('clearAll'), delayI = document.getElementById('delay');
-  const delayAllBtn = document.getElementById('delayAll'), delayUpcomingBtn = document.getElementById('delayUpcoming');
+  const titleI = document.getElementById('title');
+  const startI = document.getElementById('start');
+  const endI = document.getElementById('end');
+  const addBtn = document.getElementById('addBtn');
+  const timeline = document.getElementById('timeline');
+  const clearAll = document.getElementById('clearAll');
+  const delayI = document.getElementById('delay');
+  const delayAllBtn = document.getElementById('delayAll');
+  const delayUpcomingBtn = document.getElementById('delayUpcoming');
   const insertAfter = document.getElementById('insertAfter');
-  const makeBox = document.getElementById('makeBox'), addSubBtn = document.getElementById('addSubtask');
-
-  const noteDate = document.getElementById('noteDate'), noteText = document.getElementById('noteText'), addNoteBtn = document.getElementById('addNote');
+  const makeBox = document.getElementById('makeBox');
+  const addSubBtn = document.getElementById('addSubtask');
+  const noteDate = document.getElementById('noteDate');
+  const noteText = document.getElementById('noteText');
+  const addNoteBtn = document.getElementById('addNote');
   const notesList = document.getElementById('notesList');
+  const pomoMenu = document.getElementById('tsenh-pomo-menu');
+  const pClose = document.getElementById('p-close');
 
-  const editModal = document.getElementById('editModal'), modalStart = document.getElementById('modalStart'), modalEnd = document.getElementById('modalEnd'), modalCancel = document.getElementById('modalCancel'), modalSave = document.getElementById('modalSave');
-  const subtaskModal = document.getElementById('subtaskModal'), subtaskTitle = document.getElementById('subtaskTitle'), subtaskStart = document.getElementById('subtaskStart'), subtaskEnd = document.getElementById('subtaskEnd'), subtaskCancel = document.getElementById('subtaskCancel'), subtaskSave = document.getElementById('subtaskSave');
+  const programSelect = document.getElementById('programSelect');
+  const programDate = document.getElementById('programDate');
+  const programApplyMode = document.getElementById('programApplyMode');
+  const programSummary = document.getElementById('programSummary');
+  const applyProgramBtn = document.getElementById('applyProgram');
+  const saveProgramFromDayBtn = document.getElementById('saveProgramFromDay');
+  const deleteProgramBtn = document.getElementById('deleteProgram');
+  const exportProgramBtn = document.getElementById('exportProgram');
+  const programCsvFile = document.getElementById('programCsvFile');
+  const importProgramCsvBtn = document.getElementById('importProgramCsv');
 
-  const pomoBtn = document.getElementById('tsenh-pomo-btn'), pomoMenu = document.getElementById('tsenh-pomo-menu'), pClose = document.getElementById('p-close');
-
-  let scheduledTimers = [];
-
-  // ----------------------------
-  // Initialization
-  // ----------------------------
   function ensureProfiles(){
     profiles = loadProfiles();
     if(!profiles || profiles.length===0){
       const a = { id: uid(), name: 'Profile A' };
       const b = { id: uid(), name: 'Profile B' };
       profiles = [a,b];
-      saveProfiles(profiles);
-      saveTasks(a.id, []); saveTasks(b.id, []);
-      saveNotes(a.id, []); saveNotes(b.id, []);
-    } else {
-      profiles.forEach(p=>{
-        if(localStorage.getItem(keyForProfile(p.id)) === null) localStorage.setItem(keyForProfile(p.id), JSON.stringify([]));
-        if(localStorage.getItem(notesKeyForProfile(p.id)) === null) localStorage.setItem(notesKeyForProfile(p.id), JSON.stringify([]));
-      });
+      localStorage.setItem(PROFILE_LIST_KEY, JSON.stringify(profiles));
     }
-    if(!activeProfileId) activeProfileId = profiles[0].id;
+    profiles.forEach(p=>{
+      if(localStorage.getItem(keyForProfile(p.id)) === null) localStorage.setItem(keyForProfile(p.id), JSON.stringify([]));
+      if(localStorage.getItem(notesKeyForProfile(p.id)) === null) localStorage.setItem(notesKeyForProfile(p.id), JSON.stringify([]));
+      if(localStorage.getItem(programsKeyForProfile(p.id)) === null) localStorage.setItem(programsKeyForProfile(p.id), JSON.stringify([]));
+    });
+    if(!activeProfileId || !profiles.some(p=>p.id===activeProfileId)) activeProfileId = profiles[0]?.id || null;
     renderProfileSelect();
   }
 
   function renderProfileSelect(){
     profileSelect.innerHTML = '';
     profiles.forEach(p=>{
-      const opt = document.createElement('option'); opt.value = p.id; opt.textContent = p.name;
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = p.name;
       profileSelect.appendChild(opt);
     });
     if(activeProfileId == null && profiles.length) activeProfileId = profiles[0].id;
-    profileSelect.value = activeProfileId;
+    profileSelect.value = activeProfileId || '';
     render();
   }
 
   profileSelect.addEventListener('change', ()=>{
     activeProfileId = profileSelect.value;
     render();
+    scheduleNotifications();
   });
 
   addProfileBtn.addEventListener('click', ()=>{
-    const name = prompt('Profile name','New Profile'); if(!name) return;
-    const p = { id: uid(), name: name };
-    profiles.push(p); saveProfiles(profiles);
-    saveTasks(p.id, []); saveNotes(p.id, []);
-    activeProfileId = p.id; renderProfileSelect();
-  });
-
-  renameProfileBtn.addEventListener('click', ()=>{
-    const p = profiles.find(x=> x.id===activeProfileId); if(!p) return;
-    const newName = prompt('New name', p.name); if(!newName) return;
-    p.name = newName; saveProfiles(profiles); renderProfileSelect();
-  });
-
-  deleteProfileBtn.addEventListener('click', ()=>{
-    if(!confirm('Delete this profile and all its tasks?')) return;
-    const idx = profiles.findIndex(x=> x.id===activeProfileId); if(idx===-1) return;
-    const pid = profiles[idx].id;
-    profiles.splice(idx,1); saveProfiles(profiles);
-    localStorage.removeItem(keyForProfile(pid)); localStorage.removeItem(notesKeyForProfile(pid));
-    activeProfileId = profiles.length? profiles[0].id : null;
+    const name = prompt('Profile name','New Profile');
+    if(!name) return;
+    const p = { id: uid(), name: name.trim() };
+    profiles.push(p);
+    activeProfileId = p.id;
+    localStorage.setItem(PROFILE_LIST_KEY, JSON.stringify(profiles));
+    localStorage.setItem(keyForProfile(p.id), JSON.stringify([]));
+    localStorage.setItem(notesKeyForProfile(p.id), JSON.stringify([]));
+    localStorage.setItem(programsKeyForProfile(p.id), JSON.stringify([]));
     renderProfileSelect();
   });
 
-  // ----------------------------
-  // Rendering
-  // ----------------------------
+  renameProfileBtn.addEventListener('click', ()=>{
+    const p = profiles.find(x=> x.id===activeProfileId);
+    if(!p) return;
+    const newName = prompt('New name', p.name);
+    if(!newName) return;
+    p.name = newName.trim();
+    saveProfiles(profiles);
+  });
+
+  deleteProfileBtn.addEventListener('click', ()=>{
+    if(!activeProfileId) return;
+    if(!confirm('Delete this profile and all its tasks, notes and ready programs?')) return;
+    const idx = profiles.findIndex(x=> x.id===activeProfileId);
+    if(idx===-1) return;
+    const pid = profiles[idx].id;
+    profiles.splice(idx,1);
+    localStorage.removeItem(keyForProfile(pid));
+    localStorage.removeItem(notesKeyForProfile(pid));
+    localStorage.removeItem(programsKeyForProfile(pid));
+    if(profiles.length===0){
+      const p = {id:uid(),name:'Profile A'};
+      profiles.push(p);
+      localStorage.setItem(keyForProfile(p.id), JSON.stringify([]));
+      localStorage.setItem(notesKeyForProfile(p.id), JSON.stringify([]));
+      localStorage.setItem(programsKeyForProfile(p.id), JSON.stringify([]));
+    }
+    activeProfileId = profiles[0].id;
+    saveProfiles(profiles);
+  });
+
+  function fmtDT(ms){
+    if(!ms) return '-';
+    const d=new Date(ms);
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+  }
+  function dateKey(msOrDate){
+    const d = msOrDate instanceof Date ? msOrDate : new Date(msOrDate);
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+  function localMidnightMs(dateStr){
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr || '');
+    if(!m) return null;
+    const d = new Date(Number(m[1]), Number(m[2])-1, Number(m[3]), 0, 0, 0, 0);
+    return d.getTime();
+  }
+  function minutesFromDayStart(ms, dateStr){
+    const base = localMidnightMs(dateStr);
+    return Math.round((ms - base)/60000);
+  }
+  function offsetToTime(mins){
+    mins = Math.max(0, Math.round(Number(mins)||0));
+    const h = Math.floor(mins/60);
+    const m = mins%60;
+    return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
+  }
+  function parseTimeOffset(v){
+    const m = /^\s*(\d{1,2}):(\d{2})\s*$/.exec(v || '');
+    if(!m) return null;
+    const h = Number(m[1]), min = Number(m[2]);
+    if(h<0 || h>47 || min<0 || min>59) return null;
+    return h*60 + min;
+  }
+
   function populateInsertSelect(tasks){
     insertAfter.innerHTML = '<option value="">(append at end)</option>';
     const top = tasks.filter(t=> !t.parentId).sort((a,b)=> a.start - b.start);
     top.forEach(t=>{
-      const opt = document.createElement('option'); opt.value = t.id; opt.textContent = t.title+' — '+fmtDT(t.start);
+      const opt = document.createElement('option');
+      opt.value = t.id;
+      opt.textContent = t.title+' — '+fmtDT(t.start)+(t.isBox?' [BOX]':'');
       insertAfter.appendChild(opt);
     });
   }
 
-  function fmtDT(ms){ if(!ms) return '-'; const d=new Date(ms); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0') }
-
   function renderNotes(){
     if(!activeProfileId) return;
     const notes = loadNotes(activeProfileId).sort((a,b)=> a.date.localeCompare(b.date));
-    notesList.innerHTML=''; if(notes.length===0){ notesList.innerHTML='<p class="muted">No notes yet.</p>'; return }
-    for(let i=0;i<notes.length;i++){
-      const n = notes[i];
+    notesList.innerHTML='';
+    if(notes.length===0){ notesList.innerHTML='<p class="muted">No notes yet.</p>'; return }
+    for(const n of notes){
       const r = document.createElement('div'); r.className='note-row';
-      const cb = document.createElement('input'); cb.type='checkbox'; cb.className='note-checkbox';
-      cb.checked = !!n.done;
-      cb.style.marginRight='8px';
-      const dateDiv = document.createElement('div'); dateDiv.style.width='140px'; dateDiv.textContent = n.date;
-      const textDiv = document.createElement('div'); textDiv.style.flex='1'; textDiv.textContent = n.text;
+      const cb = document.createElement('input'); cb.type='checkbox'; cb.className='note-checkbox'; cb.checked=!!n.done;
+      const dateDiv = document.createElement('div'); dateDiv.className='note-date small muted'; dateDiv.textContent=n.date;
+      const textDiv = document.createElement('div'); textDiv.className='note-text'; textDiv.textContent=n.text;
       if(n.done) textDiv.style.textDecoration='line-through';
-      const delDiv = document.createElement('div'); const delBtn = document.createElement('button'); delBtn.className='ghost'; delBtn.textContent='Delete';
-      delBtn.addEventListener('click', ()=> { if(confirm('Delete note?')){ const arr = loadNotes(activeProfileId).filter(x=> x.id !== n.id); saveNotes(activeProfileId, arr); } });
-      delDiv.appendChild(delBtn);
-      r.appendChild(cb); r.appendChild(dateDiv); r.appendChild(textDiv); r.appendChild(delDiv);
-
+      const delBtn = document.createElement('button'); delBtn.className='ghost'; delBtn.textContent='Delete';
+      delBtn.addEventListener('click', ()=>{
+        if(confirm('Delete note?')) saveNotes(activeProfileId, loadNotes(activeProfileId).filter(x=>x.id!==n.id));
+      });
       cb.addEventListener('change', ()=>{
         const arr = loadNotes(activeProfileId);
-        const idx = arr.findIndex(x=> x.id === n.id);
-        if(idx !== -1){
-          arr[idx].done = cb.checked;
+        const idx = arr.findIndex(x=>x.id===n.id);
+        if(idx!==-1){
+          arr[idx].done=cb.checked;
           localStorage.setItem(notesKeyForProfile(activeProfileId), JSON.stringify(arr));
-          if(cb.checked) textDiv.style.textDecoration='line-through'; else textDiv.style.textDecoration='none';
+          textDiv.style.textDecoration=cb.checked?'line-through':'none';
         }
       });
-
+      r.append(cb,dateDiv,textDiv,delBtn);
       notesList.appendChild(r);
     }
   }
 
-  function render(){
-    if(!activeProfileId){ timeline.innerHTML = '<p class="muted">No profile selected</p>'; return }
-    const tasks = loadTasks(activeProfileId) || [];
-    timeline.innerHTML = '';
-    populateInsertSelect(tasks);
-    renderNotes();
-    if(tasks.length===0){ timeline.innerHTML = '<p class="muted">No tasks yet.</p>'; return }
+  function renderPrograms(){
+    if(!activeProfileId) return;
+    const programs = loadPrograms(activeProfileId);
+    const prev = programSelect.value;
+    programSelect.innerHTML = '<option value="">No saved program</option>';
+    programs.forEach(p=>{
+      const o = document.createElement('option');
+      o.value = p.id;
+      o.textContent = p.name;
+      programSelect.appendChild(o);
+    });
+    if(programs.some(p=>p.id===prev)) programSelect.value=prev;
+    else if(programs.length) programSelect.value=programs[0].id;
+    else programSelect.value='';
+    updateProgramSummary();
+  }
 
-    const top = tasks.filter(t=> !t.parentId).sort((a,b)=> a.start - b.start);
-    top.forEach((t, idx)=>{
+  function updateProgramSummary(){
+    const p = loadPrograms(activeProfileId).find(x=>x.id===programSelect.value);
+    if(!p){
+      programSummary.textContent='No program selected.';
+      return;
+    }
+    const top = p.parts.filter(x=>!x.parentTemplateId).length;
+    const subs = p.parts.length-top;
+    const starts = p.parts.filter(x=>!x.parentTemplateId).map(x=>x.startOffsetMin);
+    const ends = p.parts.filter(x=>!x.parentTemplateId).map(x=>x.endOffsetMin);
+    const range = starts.length ? `${offsetToTime(Math.min(...starts))}–${offsetToTime(Math.max(...ends))}` : '-';
+    programSummary.textContent = `${top} main part(s), ${subs} subtask(s) • ${range}`;
+  }
+
+  programSelect.addEventListener('change', updateProgramSummary);
+
+  function render(){
+    renderPrograms();
+    renderNotes();
+    if(!activeProfileId){ timeline.innerHTML='<p class="muted">No profile selected</p>'; return }
+    const tasks = loadTasks(activeProfileId) || [];
+    timeline.innerHTML='';
+    populateInsertSelect(tasks);
+    if(tasks.length===0){ timeline.innerHTML='<p class="muted">No tasks yet.</p>'; return }
+
+    const top = tasks.filter(t=>!t.parentId).sort((a,b)=>a.start-b.start);
+    top.forEach(t=>{
       if(t.isBox){
-        const box = document.createElement('div'); box.className='box';
-        box.dataset.id = t.id;
-        const header = document.createElement('div'); header.className='box-header';
-        const left = document.createElement('div'); left.innerHTML = `<div style="font-weight:700">${escapeHtml(t.title)} ${t.pinned? '🔒':''}</div><div class="small muted">${fmtDT(t.start)} — ${fmtDT(t.end)}</div>`;
-        const right = document.createElement('div'); right.className='actions';
-        const addSub = document.createElement('button'); addSub.className='ghost'; addSub.textContent='Add subtask';
-        const edit = document.createElement('button'); edit.className='ghost'; edit.textContent='Edit';
-        const del = document.createElement('button'); del.className='danger'; del.textContent='Delete';
-        addSub.addEventListener('click', ()=> openSubtaskModalForBox(t.id, t.start, t.end) );
-        edit.addEventListener('click', ()=> openEditModal(t.id) );
-        del.addEventListener('click', ()=> deleteTaskWithOptions(t.id) );
-        right.appendChild(addSub); right.appendChild(edit); right.appendChild(del);
-        header.appendChild(left); header.appendChild(right);
+        const box=document.createElement('div'); box.className='box'; box.dataset.id=t.id;
+        const header=document.createElement('div'); header.className='box-header';
+        const left=document.createElement('div');
+        left.innerHTML=`<div style="font-weight:700">${escapeHtml(t.title)} ${t.pinned?'🔒':''}</div><div class="small muted">${fmtDT(t.start)} — ${fmtDT(t.end)}</div>`;
+        const right=document.createElement('div'); right.className='actions';
+        const addSub=document.createElement('button'); addSub.className='ghost'; addSub.textContent='Add subtask';
+        const pin=document.createElement('button'); pin.className='pin'; pin.textContent=t.pinned?'Unpin':'Pin';
+        const edit=document.createElement('button'); edit.className='ghost'; edit.textContent='Edit';
+        const del=document.createElement('button'); del.className='danger'; del.textContent='Delete';
+        addSub.onclick=()=>openSubtaskModalForBox(t.id,t.start,t.end);
+        pin.onclick=()=>togglePin(t.id);
+        edit.onclick=()=>openEditModal(t.id);
+        del.onclick=()=>deleteTaskWithOptions(t.id);
+        right.append(addSub,pin,edit,del);
+        header.append(left,right);
         box.appendChild(header);
-        const subs = tasks.filter(x=> x.parentId === t.id).sort((a,b)=> a.start - b.start);
-        subs.forEach(s=>{
-          const sdiv = document.createElement('div'); sdiv.className='box-subtask';
-          sdiv.innerHTML = `<div style="display:flex;justify-content:space-between;gap:8px"><div><strong>${escapeHtml(s.title)}</strong><div class="small muted">${fmtDT(s.start)} — ${fmtDT(s.end)}</div></div><div class="actions"><button class="start-btn ghost">Start</button><button class="edit-btn ghost">Edit</button><button class="danger del-btn">Delete</button></div></div>`;
-          sdiv.querySelector('.start-btn').addEventListener('click', ()=> startTaskTimerById(s.id));
-          sdiv.querySelector('.edit-btn').addEventListener('click', ()=> openEditModal(s.id));
-          sdiv.querySelector('.del-btn').addEventListener('click', ()=> deleteTaskWithOptions(s.id));
+        tasks.filter(x=>x.parentId===t.id).sort((a,b)=>a.start-b.start).forEach(s=>{
+          const sdiv=document.createElement('div'); sdiv.className='box-subtask';
+          sdiv.innerHTML=`<div style="display:flex;justify-content:space-between;gap:8px"><div><strong>${escapeHtml(s.title)}</strong><div class="small muted">${fmtDT(s.start)} — ${fmtDT(s.end)}</div></div><div class="actions"><button class="start-btn ghost">Start</button><button class="edit-btn ghost">Edit</button><button class="danger del-btn">Delete</button></div></div>`;
+          sdiv.querySelector('.start-btn').onclick=()=>startTaskTimerById(s.id);
+          sdiv.querySelector('.edit-btn').onclick=()=>openEditModal(s.id);
+          sdiv.querySelector('.del-btn').onclick=()=>deleteTaskWithOptions(s.id);
           box.appendChild(sdiv);
         });
         timeline.appendChild(box);
       } else {
-        const el = document.createElement('div'); el.className='task'; el.dataset.id = t.id;
-        const left = document.createElement('div'); left.className='meta';
-        left.innerHTML = `<div class="title-row"><div style="font-weight:700">${escapeHtml(t.title)} ${t.pinned? '🔒':''}</div><div class="small muted">${fmtDT(t.start)} — ${fmtDT(t.end)}</div></div>`;
-        const right = document.createElement('div'); right.className='actions';
-        const pinBtn = document.createElement('button'); pinBtn.className='pin'; pinBtn.textContent = t.pinned? 'Unpin' : 'Pin'; pinBtn.onclick = ()=> togglePin(t.id);
-        const edit = document.createElement('button'); edit.className='ghost'; edit.textContent='Edit'; edit.onclick = ()=> openEditModal(t.id);
-        const startBtn = document.createElement('button'); startBtn.className='ghost'; startBtn.textContent='Start'; startBtn.onclick = ()=> startTaskTimerById(t.id);
-        const del = document.createElement('button'); del.className='danger'; del.textContent='Delete'; del.onclick = ()=> deleteTaskWithOptions(t.id);
-        right.appendChild(pinBtn); right.appendChild(edit); right.appendChild(startBtn); right.appendChild(del);
-        el.appendChild(left); el.appendChild(right);
+        const el=document.createElement('div'); el.className='task'; el.dataset.id=t.id;
+        const left=document.createElement('div'); left.className='meta';
+        left.innerHTML=`<div class="title-row"><div style="font-weight:700">${escapeHtml(t.title)} ${t.pinned?'🔒':''}</div><div class="small muted">${fmtDT(t.start)} — ${fmtDT(t.end)}</div></div>`;
+        const right=document.createElement('div'); right.className='actions';
+        const pinBtn=document.createElement('button'); pinBtn.className='pin'; pinBtn.textContent=t.pinned?'Unpin':'Pin'; pinBtn.onclick=()=>togglePin(t.id);
+        const edit=document.createElement('button'); edit.className='ghost'; edit.textContent='Edit'; edit.onclick=()=>openEditModal(t.id);
+        const startBtn=document.createElement('button'); startBtn.className='ghost'; startBtn.textContent='Start'; startBtn.onclick=()=>startTaskTimerById(t.id);
+        const del=document.createElement('button'); del.className='danger'; del.textContent='Delete'; del.onclick=()=>deleteTaskWithOptions(t.id);
+        right.append(pinBtn,edit,startBtn,del);
+        el.append(left,right);
         timeline.appendChild(el);
       }
     });
   }
 
-  // ----------------------------
-  // CRUD + behavior (same as previous)
-  // ----------------------------
   function addTask(){
     if(!activeProfileId){ alert('No active profile'); return }
-    const title = titleI.value.trim(); const s = parseDT(startI.value); const e = parseDT(endI.value);
+    const title=titleI.value.trim();
+    const s=parseDT(startI.value), e=parseDT(endI.value);
     if(!title){ alert('Title required'); return }
     if(!s || !e || e<=s){ alert('Start and end must be valid and end after start'); return }
-    const tasks = loadTasks(activeProfileId).sort((a,b)=> a.start - b.start);
-    const afterId = insertAfter.value;
-    const isBox = makeBox.checked;
-    const newTask = { id: uid(), title, start: s, end: e, pinned:false, isBox: !!isBox, color: isBox? '#60a5fa': null, parentId: null };
+    const tasks=loadTasks(activeProfileId);
+    const afterId=insertAfter.value;
+    const newTask={id:uid(),title,start:s,end:e,pinned:false,isBox:!!makeBox.checked,color:makeBox.checked?'#60a5fa':null,parentId:null};
 
-    if(!afterId){ tasks.push(newTask); }
-    else {
-      const idx = tasks.findIndex(x=> x.id===afterId);
-      if(idx===-1){ tasks.push(newTask); }
-      else {
-        const prev = tasks[idx];
-        const next = tasks[idx+1];
-        const gap = next ? Math.max(0, next.start - prev.end) : 0;
-        newTask.start = prev.end;
-        const origDur = Math.max(15*60000, e - s);
-        newTask.end = newTask.start + origDur;
-        const shift = newTask.end - s;
-        for(let i = idx+1; i < tasks.length; i++){
-          if(tasks[i].pinned) continue;
-          tasks[i].start += shift; tasks[i].end += shift;
+    if(!afterId){
+      tasks.push(newTask);
+    } else {
+      const top = tasks.filter(x=>!x.parentId).sort((a,b)=>a.start-b.start);
+      const topIdx = top.findIndex(x=>x.id===afterId);
+      if(topIdx===-1){
+        tasks.push(newTask);
+      } else {
+        const prev=top[topIdx];
+        const origDur=Math.max(15*60000,e-s);
+        newTask.start=prev.end;
+        newTask.end=newTask.start+origDur;
+        const shift=origDur;
+        const followingIds=new Set(top.slice(topIdx+1).map(x=>x.id));
+        for(const t of tasks){
+          if(t.pinned) continue;
+          if(followingIds.has(t.id) || (t.parentId && followingIds.has(t.parentId))){
+            t.start+=shift; t.end+=shift;
+          }
         }
-        tasks.splice(idx+1,0,newTask);
+        tasks.push(newTask);
       }
     }
-    saveTasks(activeProfileId, tasks);
+    saveTasks(activeProfileId,tasks);
     titleI.value=''; startI.value=''; endI.value=''; insertAfter.value=''; makeBox.checked=false;
   }
 
   function deleteTaskWithOptions(id){
     if(!activeProfileId) return;
-    let tasks = loadTasks(activeProfileId).sort((a,b)=> a.start - b.start);
-    const idx = tasks.findIndex(t=>t.id===id); if(idx===-1){ alert('Not found'); return }
-    const keep = confirm('Delete this task?\n\nOK: delete and keep others unchanged.\nCancel: delete and shift following tasks earlier to fill gap.');
-    const removed = tasks.splice(idx,1)[0];
-    if(!keep){
-      const prev = tasks[idx-1] || null; const next = tasks[idx] || null;
-      const removedDur = removed.end - removed.start;
-      const gap = (prev && next) ? Math.max(0, next.start - prev.end) : 0;
-      const shift = removedDur + gap;
-      for(let i = idx; i < tasks.length; i++){
-        if(tasks[i].pinned) continue;
-        tasks[i].start -= shift; tasks[i].end -= shift;
+    let tasks=loadTasks(activeProfileId);
+    const removed=tasks.find(t=>t.id===id);
+    if(!removed){ alert('Not found'); return }
+    const keep=confirm('Delete this task?\n\nOK: delete and keep other times unchanged.\nCancel: delete and shift later main tasks earlier by this task duration.');
+    const removedDur=Math.max(0,removed.end-removed.start);
+    const top=tasks.filter(t=>!t.parentId).sort((a,b)=>a.start-b.start);
+    const topIdx=top.findIndex(t=>t.id===id);
+    const laterIds=topIdx>=0 ? new Set(top.slice(topIdx+1).map(t=>t.id)) : new Set();
+    tasks=tasks.filter(t=>t.id!==id && t.parentId!==id);
+    if(!keep && topIdx>=0){
+      for(const t of tasks){
+        if(t.pinned) continue;
+        if(laterIds.has(t.id) || (t.parentId && laterIds.has(t.parentId))){ t.start-=removedDur; t.end-=removedDur; }
       }
     }
-    tasks = tasks.filter(t=> t.parentId !== id);
-    saveTasks(activeProfileId, tasks);
+    saveTasks(activeProfileId,tasks);
   }
 
-  function deleteAll(){ if(!confirm('Clear all tasks for this profile?')) return; localStorage.removeItem(keyForProfile(activeProfileId)); render(); }
+  function deleteAll(){
+    if(!activeProfileId) return;
+    if(!confirm('Clear all tasks for this profile?')) return;
+    localStorage.setItem(keyForProfile(activeProfileId), JSON.stringify([]));
+    render();
+    scheduleNotifications();
+  }
 
   function openEditModal(taskId){
-    const tasks = loadTasks(activeProfileId);
-    const t = tasks.find(x=> x.id === taskId);
+    const tasks=loadTasks(activeProfileId);
+    const t=tasks.find(x=>x.id===taskId);
     if(!t){ alert('Task not found'); return }
-    const modal = document.getElementById('editModal');
-    modal.style.display = 'flex';
-    document.getElementById('modalStart').value = toInputLocal(t.start);
-    document.getElementById('modalEnd').value = toInputLocal(t.end);
-    const saveBtn = document.getElementById('modalSave');
-    saveBtn.onclick = ()=>{
-      const ns = parseDT(document.getElementById('modalStart').value);
-      const ne = parseDT(document.getElementById('modalEnd').value);
-      if(!ns || !ne || ne <= ns){ alert('Invalid times'); return }
-      t.start = ns; t.end = ne;
-      saveTasks(activeProfileId, tasks);
-      modal.style.display = 'none';
+    const modal=document.getElementById('editModal');
+    modal.style.display='flex';
+    document.getElementById('modalStart').value=toInputLocal(t.start);
+    document.getElementById('modalEnd').value=toInputLocal(t.end);
+    document.getElementById('modalSave').onclick=()=>{
+      const ns=parseDT(document.getElementById('modalStart').value);
+      const ne=parseDT(document.getElementById('modalEnd').value);
+      if(!ns || !ne || ne<=ns){ alert('Invalid times'); return }
+      t.start=ns; t.end=ne;
+      saveTasks(activeProfileId,tasks);
+      modal.style.display='none';
     };
-    document.getElementById('modalCancel').onclick = ()=> modal.style.display = 'none';
+    document.getElementById('modalCancel').onclick=()=>modal.style.display='none';
   }
 
-  function openSubtaskModalForBox(boxId, defaultStart, defaultEnd){
-    const modal = document.getElementById('subtaskModal');
-    if(!modal) return;
-    modal.style.display = 'flex';
-    document.getElementById('subtaskTitle').value = '';
-    document.getElementById('subtaskStart').value = toInputLocal(defaultStart || Date.now());
-    document.getElementById('subtaskEnd').value = toInputLocal(defaultEnd || ( (defaultStart || Date.now()) + 30*60000 ));
-    document.getElementById('subtaskSave').onclick = ()=>{
-      const title = document.getElementById('subtaskTitle').value.trim();
-      const s = parseDT(document.getElementById('subtaskStart').value);
-      const e = parseDT(document.getElementById('subtaskEnd').value);
+  function openSubtaskModalForBox(boxId,defaultStart,defaultEnd){
+    const modal=document.getElementById('subtaskModal');
+    modal.style.display='flex';
+    document.getElementById('subtaskTitle').value='';
+    document.getElementById('subtaskStart').value=toInputLocal(defaultStart||Date.now());
+    document.getElementById('subtaskEnd').value=toInputLocal(defaultEnd||((defaultStart||Date.now())+30*60000));
+    document.getElementById('subtaskSave').onclick=()=>{
+      const title=document.getElementById('subtaskTitle').value.trim();
+      const s=parseDT(document.getElementById('subtaskStart').value);
+      const e=parseDT(document.getElementById('subtaskEnd').value);
       if(!title){ alert('Title required'); return }
-      if(!s || !e || e <= s){ alert('Invalid times'); return }
-      const tasks = loadTasks(activeProfileId);
-      tasks.push({ id: uid(), title, start: s, end: e, pinned:false, isBox:false, parentId: boxId });
-      saveTasks(activeProfileId, tasks);
-      modal.style.display = 'none';
+      if(!s || !e || e<=s){ alert('Invalid times'); return }
+      const tasks=loadTasks(activeProfileId);
+      tasks.push({id:uid(),title,start:s,end:e,pinned:false,isBox:false,parentId:boxId});
+      saveTasks(activeProfileId,tasks);
+      modal.style.display='none';
     };
-    document.getElementById('subtaskCancel').onclick = ()=> modal.style.display = 'none';
+    document.getElementById('subtaskCancel').onclick=()=>modal.style.display='none';
   }
 
-  function togglePin(id){ const tasks = loadTasks(activeProfileId); const t = tasks.find(x=> x.id===id); if(!t) return; t.pinned = !t.pinned; saveTasks(activeProfileId, tasks); }
+  function togglePin(id){
+    const tasks=loadTasks(activeProfileId);
+    const t=tasks.find(x=>x.id===id);
+    if(!t) return;
+    t.pinned=!t.pinned;
+    saveTasks(activeProfileId,tasks);
+  }
 
-  // ----------------------------
-  // Timer and native intents (same)
-  // ----------------------------
-  let runningCountdown = null;
   function startTaskTimerById(id){
-    const tasks = loadTasks(activeProfileId); const t = tasks.find(x=> x.id===id); if(!t) return;
-    const nowMs = now(); let duration = 0;
-    if(nowMs < t.start) duration = t.end - t.start;
-    else if(nowMs >= t.start && nowMs < t.end) duration = t.end - nowMs;
+    const tasks=loadTasks(activeProfileId);
+    const t=tasks.find(x=>x.id===id);
+    if(!t) return;
+    const nowMs=now();
+    let duration=0;
+    if(nowMs<t.start) duration=t.end-t.start;
+    else if(nowMs>=t.start && nowMs<t.end) duration=t.end-nowMs;
     else { alert('Task already finished'); return }
-    if(runningCountdown) { clearInterval(runningCountdown); runningCountdown = null; }
-    const endTs = Date.now() + duration;
+    if(runningCountdown){ clearInterval(runningCountdown); runningCountdown=null; }
+    const endTs=Date.now()+duration;
     updateCountdownUI(duration);
-    runningCountdown = setInterval(()=>{
-      const rem = Math.max(0, Math.round((endTs - Date.now())/1000));
+    runningCountdown=setInterval(()=>{
+      const rem=Math.max(0,Math.round((endTs-Date.now())/1000));
       updateCountdownUI(rem*1000);
-      if(rem <= 0){ clearInterval(runningCountdown); runningCountdown = null; notify('Timer finished for: '+t.title, 'Task timer ended'); showToast('Timer finished'); }
-    }, 1000);
-    tryOpenAndroidTimer(Math.round(duration/1000), t.title);
-    showToast('Timer started (in-page). Attempted to open native timer.');
+      if(rem<=0){
+        clearInterval(runningCountdown); runningCountdown=null;
+        notify('Timer finished for: '+t.title,'Task timer ended');
+        showToast('Timer finished');
+      }
+    },1000);
+    tryOpenAndroidTimer(Math.round(duration/1000),t.title);
+    showToast('Timer started. Attempted to open native timer.');
   }
 
   function updateCountdownUI(ms){
-    const seconds = Math.round(ms/1000);
-    const t = document.getElementById('toast'); t.textContent = 'Timer: '+formatSeconds(seconds); t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(()=> t.classList.remove('show'), 4000);
+    const seconds=Math.round(ms/1000);
+    const t=document.getElementById('toast');
+    t.textContent='Timer: '+formatSeconds(seconds);
+    t.classList.add('show');
+    clearTimeout(t._h);
+    t._h=setTimeout(()=>t.classList.remove('show'),4000);
   }
-  function formatSeconds(sec){ if(sec<60) return sec+'s'; const m = Math.floor(sec/60); const s = sec%60; return m+'m '+String(s).padStart(2,'0')+'s' }
-
-  function tryOpenAndroidTimer(seconds, label){
+  function formatSeconds(sec){ if(sec<60) return sec+'s'; const m=Math.floor(sec/60); const s=sec%60; return m+'m '+String(s).padStart(2,'0')+'s' }
+  function tryOpenAndroidTimer(seconds,label){
     if(!seconds || seconds<=0) return;
-    const enc = encodeURIComponent(label || 'Timer');
-    const intent = `intent://#Intent;action=android.intent.action.SET_TIMER;S.android.intent.extra.alarm.MESSAGE=${enc};i.android.intent.extra.alarm.LENGTH=${seconds};end`;
-    try{ const a = document.createElement('a'); a.href = intent; a.style.display='none'; document.body.appendChild(a); a.click(); setTimeout(()=> a.remove(), 800); }catch(e){ console.warn('intent failed', e); }
+    const enc=encodeURIComponent(label||'Timer');
+    const intent=`intent://#Intent;action=android.intent.action.SET_TIMER;S.android.intent.extra.alarm.MESSAGE=${enc};i.android.intent.extra.alarm.LENGTH=${seconds};end`;
+    try{
+      const a=document.createElement('a'); a.href=intent; a.style.display='none'; document.body.appendChild(a); a.click(); setTimeout(()=>a.remove(),800);
+    }catch(e){ console.warn('intent failed',e); }
   }
 
-  openClockBtn.addEventListener('click', ()=>{
-    const intent = 'intent://#Intent;package=com.google.android.deskclock;end';
-    try{ const a = document.createElement('a'); a.href = intent; a.style.display='none'; document.body.appendChild(a); a.click(); setTimeout(()=> a.remove(), 800); showToast('Attempted to open Clock (Google Clock).'); }catch(e){ showToast('Could not open Clock app'); }
+  openClockBtn.addEventListener('click',()=>{
+    const intent='intent://#Intent;package=com.google.android.deskclock;end';
+    try{
+      const a=document.createElement('a'); a.href=intent; a.style.display='none'; document.body.appendChild(a); a.click(); setTimeout(()=>a.remove(),800); showToast('Attempted to open Google Clock.');
+    }catch(e){ showToast('Could not open Clock app'); }
   });
 
-  // ----------------------------
-  // Delay, notes, notifications (same)
-  // ----------------------------
-  function applyDelayToAll(minutes){ const m = parseInt(minutes||'0',10); if(isNaN(m)||m<=0){ alert('Enter minutes > 0'); return }; const ms = m*60000; const tasks = loadTasks(activeProfileId); for(let t of tasks){ if(t.pinned) continue; t.start += ms; t.end += ms; } saveTasks(activeProfileId, tasks); showToast('Applied delay to ALL tasks'); delayI.value=''; }
-  function applyDelayToUpcoming(minutes){ const m = parseInt(minutes||'0',10); if(isNaN(m)||m<=0){ alert('Enter minutes > 0'); return }; const ms = m*60000; const nowMs = now(); const tasks = loadTasks(activeProfileId).sort((a,b)=> a.start - b.start); const runningIdx = tasks.findIndex(t => t.start <= nowMs && t.end >= nowMs); if(runningIdx !== -1){ const running = tasks[runningIdx]; if(!running.pinned) running.end += ms; } for(let t of tasks){ if(t.pinned) continue; if(t.start >= nowMs) { t.start += ms; t.end += ms; } } saveTasks(activeProfileId, tasks); showToast('Applied delay to upcoming tasks'); delayI.value=''; }
+  function applyDelayToAll(minutes){
+    const m=parseInt(minutes||'0',10);
+    if(isNaN(m)||m<=0){ alert('Enter minutes > 0'); return }
+    const ms=m*60000;
+    const tasks=loadTasks(activeProfileId);
+    for(const t of tasks){ if(!t.pinned){ t.start+=ms; t.end+=ms; } }
+    saveTasks(activeProfileId,tasks); delayI.value='';
+  }
+  function applyDelayToUpcoming(minutes){
+    const m=parseInt(minutes||'0',10);
+    if(isNaN(m)||m<=0){ alert('Enter minutes > 0'); return }
+    const ms=m*60000, nowMs=now();
+    const tasks=loadTasks(activeProfileId);
+    const top=tasks.filter(t=>!t.parentId).sort((a,b)=>a.start-b.start);
+    const running=top.find(t=>t.start<=nowMs && t.end>=nowMs);
+    if(running && !running.pinned){
+      running.end+=ms;
+      tasks.filter(x=>x.parentId===running.id && !x.pinned).forEach(x=>x.end+=ms);
+    }
+    const upcomingTopIds=new Set(top.filter(t=>t.start>=nowMs).map(t=>t.id));
+    for(const t of tasks){
+      if(t.pinned) continue;
+      if(upcomingTopIds.has(t.id) || (t.parentId && upcomingTopIds.has(t.parentId))){ t.start+=ms; t.end+=ms; }
+    }
+    saveTasks(activeProfileId,tasks); delayI.value='';
+  }
 
-  addNoteBtn.addEventListener('click', ()=>{ const date = noteDate.value; const text = noteText.value.trim(); if(!date || !text){ alert('Pick date and write a note'); return } const notes = loadNotes(activeProfileId); notes.push({ id: uid(), date, text, done:false }); saveNotes(activeProfileId, notes); noteText.value=''; showToast('Note added'); });
+  addNoteBtn.addEventListener('click',()=>{
+    const date=noteDate.value, text=noteText.value.trim();
+    if(!date || !text){ alert('Pick date and write a note'); return }
+    const notes=loadNotes(activeProfileId);
+    notes.push({id:uid(),date,text,done:false});
+    saveNotes(activeProfileId,notes);
+    noteText.value='';
+  });
 
-  function ensureNotificationPermission(){ if(!('Notification' in window)) return; if(Notification.permission === 'default'){ Notification.requestPermission().then(()=>{}); } }
-  function clearScheduled(){ scheduledTimers.forEach(i=> clearTimeout(i)); scheduledTimers = []; }
-  function scheduleNotifications(){ clearScheduled(); ensureNotificationPermission(); const tasks = loadTasks(activeProfileId); const nowMs = now(); tasks.forEach(t=>{ if(t.parentId) return; if(t.start > nowMs && !t.pinned){ const delay = t.start - nowMs; const id = setTimeout(()=> notify('Task starting: '+t.title, 'Start time reached'), delay); scheduledTimers.push(id); } if(t.end > nowMs && !t.pinned){ const delay2 = t.end - nowMs; const id2 = setTimeout(()=> notify('Task ended: '+t.title, 'End time reached'), delay2); scheduledTimers.push(id2); } }); }
-  function notify(title, body){ if('Notification' in window && Notification.permission === 'granted'){ new Notification(title, { body }); } else { showToast(title); try{ if(navigator.vibrate) navigator.vibrate([200,100,200]); }catch(e){} }}
+  function ensureNotificationPermission(){
+    if(!('Notification' in window)) return;
+    if(Notification.permission==='default') Notification.requestPermission().catch(()=>{});
+  }
+  function clearScheduled(){ scheduledTimers.forEach(i=>clearTimeout(i)); scheduledTimers=[]; }
+  function scheduleNotifications(){
+    clearScheduled();
+    if(!activeProfileId) return;
+    ensureNotificationPermission();
+    const tasks=loadTasks(activeProfileId), nowMs=now(), MAX_TIMEOUT=2147483000;
+    tasks.forEach(t=>{
+      if(t.parentId || t.pinned) return;
+      if(t.start>nowMs){
+        const delay=t.start-nowMs;
+        if(delay<=MAX_TIMEOUT) scheduledTimers.push(setTimeout(()=>notify('Task starting: '+t.title,'Start time reached'),delay));
+      }
+      if(t.end>nowMs){
+        const delay=t.end-nowMs;
+        if(delay<=MAX_TIMEOUT) scheduledTimers.push(setTimeout(()=>notify('Task ended: '+t.title,'End time reached'),delay));
+      }
+    });
+  }
+  function notify(title,body){
+    if('Notification' in window && Notification.permission==='granted') new Notification(title,{body});
+    else{
+      showToast(title);
+      try{ if(navigator.vibrate) navigator.vibrate([200,100,200]); }catch(e){}
+    }
+  }
 
-  function parseDT(v){ if(!v) return null; const t = new Date(v); return isNaN(t.getTime())? null : t.getTime() }
-  function toInputLocal(ms){ if(!ms) return ''; const d=new Date(ms); const YYYY=d.getFullYear(); const MM=String(d.getMonth()+1).padStart(2,'0'); const DD=String(d.getDate()).padStart(2,'0'); const hh=String(d.getHours()).padStart(2,'0'); const mm=String(d.getMinutes()).padStart(2,'0'); return `${YYYY}-${MM}-${DD}T${hh}:${mm}` }
-  function escapeHtml(s){ return (s+'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function parseDT(v){ if(!v) return null; const t=new Date(v); return isNaN(t.getTime())?null:t.getTime() }
+  function toInputLocal(ms){
+    if(!ms) return '';
+    const d=new Date(ms);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}T${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  }
+  function escapeHtml(s){ return (s+'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
 
-  // ----------------------------
-  // UI wiring & subtask + notes helpers
-  // ----------------------------
-  addSubBtn.addEventListener('click', ()=>{
-    const boxId = insertAfter.value;
-    if(!boxId){ alert('Select a box in "Insert after" to add a subtask into it'); return }
-    const tasks = loadTasks(activeProfileId);
-    const box = tasks.find(t=> t.id === boxId);
+  addSubBtn.addEventListener('click',()=>{
+    const boxId=insertAfter.value;
+    if(!boxId){ alert('Select a box in “Insert after” first'); return }
+    const box=loadTasks(activeProfileId).find(t=>t.id===boxId);
     if(!box || !box.isBox){ alert('Selected task is not a box'); return }
-    openSubtaskModalForBox(box.id, box.start, box.end);
+    openSubtaskModalForBox(box.id,box.start,box.end);
   });
 
-  addBtn.addEventListener('click', ()=>{
+  addBtn.addEventListener('click',()=>{
     if(!activeProfileId){ alert('No profile active'); return }
     if(!startI.value && !endI.value && insertAfter.value){
-      const tasks = loadTasks(activeProfileId).sort((a,b)=> a.start - b.start);
-      const idx = tasks.findIndex(x=> x.id === insertAfter.value);
-      if(idx !== -1){
-        const prev = tasks[idx];
-        const sDefault = prev.end;
-        const eDefault = sDefault + 15*60000;
-        startI.value = toInputLocal(sDefault);
-        endI.value = toInputLocal(eDefault);
-      }
+      const prev=loadTasks(activeProfileId).find(x=>x.id===insertAfter.value);
+      if(prev){ startI.value=toInputLocal(prev.end); endI.value=toInputLocal(prev.end+15*60000); }
     }
     addTask();
   });
 
-  clearAll.addEventListener('click', deleteAll);
-  delayAllBtn.addEventListener('click', ()=> applyDelayToAll(delayI.value));
-  delayUpcomingBtn.addEventListener('click', ()=> applyDelayToUpcoming(delayI.value));
+  clearAll.addEventListener('click',deleteAll);
+  delayAllBtn.addEventListener('click',()=>applyDelayToAll(delayI.value));
+  delayUpcomingBtn.addEventListener('click',()=>applyDelayToUpcoming(delayI.value));
 
-  document.querySelectorAll('.p-preset').forEach(b=> b.addEventListener('click', ()=>{
-    const minutes = parseInt(b.dataset.min,10);
-    const create = document.getElementById('p-create-task').checked;
-    const title = `Pomodoro — ${minutes}m`;
-    const nowMs = now();
-    const start = nowMs;
-    const end = nowMs + minutes*60000;
+  document.querySelectorAll('.p-preset').forEach(b=>b.addEventListener('click',()=>{
+    const minutes=parseInt(b.dataset.min,10);
+    const create=document.getElementById('p-create-task').checked;
+    const title=`Pomodoro — ${minutes}m`;
+    const start=now(), end=start+minutes*60000;
     if(create){
-      const tasks = loadTasks(activeProfileId) || [];
-      tasks.push({ id: uid(), title, start, end, pinned:false, isBox:false, parentId: null });
-      saveTasks(activeProfileId, tasks);
-      setTimeout(()=> render(), 180);
-    } else {
-      tryOpenAndroidTimer(minutes*60, title);
-    }
+      const tasks=loadTasks(activeProfileId)||[];
+      tasks.push({id:uid(),title,start,end,pinned:false,isBox:false,parentId:null});
+      saveTasks(activeProfileId,tasks);
+    } else tryOpenAndroidTimer(minutes*60,title);
   }));
-
-  document.getElementById('tsenh-pomo-btn').addEventListener('click', ()=> { pomoMenu.style.display = pomoMenu.style.display==='none'?'block':'none'; });
-  pClose.addEventListener('click', ()=> pomoMenu.style.display='none');
-
-  noteDate.value = new Date().toISOString().slice(0,10);
+  document.getElementById('tsenh-pomo-btn').addEventListener('click',()=>{ pomoMenu.style.display=pomoMenu.style.display==='none'?'block':'none'; });
+  pClose.addEventListener('click',()=>pomoMenu.style.display='none');
 
   // ----------------------------
-  // Start app and fix the MutationObserver loop issue
+  // Ready Programs
   // ----------------------------
+  function saveCurrentDayAsProgram(){
+    if(!activeProfileId) return;
+    const day=programDate.value;
+    if(!day){ alert('Choose a day first'); return }
+    const tasks=loadTasks(activeProfileId);
+    const top=tasks.filter(t=>!t.parentId && dateKey(t.start)===day).sort((a,b)=>a.start-b.start);
+    if(top.length===0){ alert('No main tasks start on that day'); return }
+    const nameRaw=prompt('Program name','Study Day');
+    if(!nameRaw) return;
+    const name=nameRaw.trim();
+    const includedTopIds=new Set(top.map(t=>t.id));
+    const selected=tasks.filter(t=>includedTopIds.has(t.id) || (t.parentId && includedTopIds.has(t.parentId)));
+    const templateIdByTaskId=new Map();
+    top.forEach(t=>templateIdByTaskId.set(t.id,uid()));
+    selected.filter(t=>t.parentId).forEach(t=>templateIdByTaskId.set(t.id,uid()));
+
+    const parts=selected.map(t=>({
+      templateId:templateIdByTaskId.get(t.id),
+      parentTemplateId:t.parentId?templateIdByTaskId.get(t.parentId):null,
+      title:t.title,
+      startOffsetMin:minutesFromDayStart(t.start,day),
+      endOffsetMin:minutesFromDayStart(t.end,day),
+      isBox:!!t.isBox,
+      pinned:!!t.pinned
+    })).sort((a,b)=>a.startOffsetMin-b.startOffsetMin);
+
+    const programs=loadPrograms(activeProfileId);
+    const same=programs.find(p=>p.name.toLowerCase()===name.toLowerCase());
+    if(same){
+      if(!confirm(`A program named “${name}” already exists. Replace it?`)) return;
+      same.parts=parts; same.updatedAt=Date.now();
+      savePrograms(activeProfileId,programs,true);
+      programSelect.value=same.id;
+    } else {
+      const p={id:uid(),name,createdAt:Date.now(),parts};
+      programs.push(p);
+      savePrograms(activeProfileId,programs,true);
+      programSelect.value=p.id;
+    }
+    updateProgramSummary();
+    showToast('Day saved as reusable program');
+  }
+
+  function collectTargetDayIds(tasks,day){
+    const topIds=new Set(tasks.filter(t=>!t.parentId && dateKey(t.start)===day).map(t=>t.id));
+    const allIds=new Set(topIds);
+    tasks.forEach(t=>{ if(t.parentId && topIds.has(t.parentId)) allIds.add(t.id); });
+    return allIds;
+  }
+
+  function applySelectedProgram(){
+    if(!activeProfileId) return;
+    const program=loadPrograms(activeProfileId).find(p=>p.id===programSelect.value);
+    if(!program){ alert('Choose a saved program'); return }
+    const day=programDate.value;
+    if(!day){ alert('Choose the target day'); return }
+    const base=localMidnightMs(day);
+    if(base===null){ alert('Invalid target day'); return }
+    let tasks=loadTasks(activeProfileId);
+
+    if(programApplyMode.value==='replace'){
+      const removeIds=collectTargetDayIds(tasks,day);
+      if(removeIds.size>0 && !confirm('This day already has tasks. Replace those tasks with the selected program?')) return;
+      tasks=tasks.filter(t=>!removeIds.has(t.id));
+    }
+
+    const idMap=new Map();
+    program.parts.forEach(part=>idMap.set(part.templateId,uid()));
+    const created=program.parts.map(part=>({
+      id:idMap.get(part.templateId),
+      title:part.title,
+      start:base+part.startOffsetMin*60000,
+      end:base+part.endOffsetMin*60000,
+      pinned:!!part.pinned,
+      isBox:!!part.isBox,
+      color:part.isBox?'#60a5fa':null,
+      parentId:part.parentTemplateId?idMap.get(part.parentTemplateId):null
+    }));
+    tasks.push(...created);
+    saveTasks(activeProfileId,tasks);
+    showToast(`Applied “${program.name}” to ${day}`);
+  }
+
+  function deleteSelectedProgram(){
+    const id=programSelect.value;
+    if(!id){ alert('Choose a program'); return }
+    const programs=loadPrograms(activeProfileId);
+    const p=programs.find(x=>x.id===id);
+    if(!p) return;
+    if(!confirm(`Delete ready program “${p.name}”?`)) return;
+    savePrograms(activeProfileId,programs.filter(x=>x.id!==id));
+  }
+
+  function csvEscape(v){
+    const s=String(v??'');
+    return /[",\n\r]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;
+  }
+
+  function exportSelectedProgram(){
+    const p=loadPrograms(activeProfileId).find(x=>x.id===programSelect.value);
+    if(!p){ alert('Choose a program'); return }
+    const rows=[['program','id','parent_id','type','title','start','end','pinned']];
+    p.parts.slice().sort((a,b)=>a.startOffsetMin-b.startOffsetMin).forEach(part=>{
+      const type=part.parentTemplateId?'subtask':(part.isBox?'box':'task');
+      rows.push([p.name,part.templateId,part.parentTemplateId||'',type,part.title,offsetToTime(part.startOffsetMin),offsetToTime(part.endOffsetMin),part.pinned?'true':'false']);
+    });
+    const csv=rows.map(r=>r.map(csvEscape).join(',')).join('\r\n');
+    const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download=(p.name.replace(/[^a-z0-9-_]+/gi,'_')||'program')+'.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  }
+
+  function parseCsv(text){
+    const rows=[];
+    let row=[], field='', inQuotes=false;
+    for(let i=0;i<text.length;i++){
+      const c=text[i];
+      if(inQuotes){
+        if(c==='"'){
+          if(text[i+1]==='"'){ field+='"'; i++; }
+          else inQuotes=false;
+        } else field+=c;
+      } else {
+        if(c==='"') inQuotes=true;
+        else if(c===','){ row.push(field); field=''; }
+        else if(c==='\n'){ row.push(field); rows.push(row); row=[]; field=''; }
+        else if(c!=='\r') field+=c;
+      }
+    }
+    row.push(field);
+    if(row.some(x=>x!=='')) rows.push(row);
+    return rows;
+  }
+
+  function uniqueProgramName(name,existingNames){
+    if(!existingNames.has(name.toLowerCase())) return name;
+    let n=2;
+    while(existingNames.has(`${name} (${n})`.toLowerCase())) n++;
+    return `${name} (${n})`;
+  }
+
+  async function importProgramsFromCsv(){
+    const file=programCsvFile.files && programCsvFile.files[0];
+    if(!file){ alert('Choose a CSV file first'); return }
+    let text;
+    try{ text=await file.text(); }catch(e){ alert('Could not read CSV file'); return }
+    text=text.replace(/^\uFEFF/,'');
+    const rows=parseCsv(text);
+    if(rows.length<2){ alert('CSV has no data rows'); return }
+    const headers=rows[0].map(x=>x.trim().toLowerCase());
+    const required=['program','id','parent_id','type','title','start','end','pinned'];
+    const missing=required.filter(h=>!headers.includes(h));
+    if(missing.length){ alert('Missing CSV column(s): '+missing.join(', ')); return }
+    const idx=Object.fromEntries(required.map(h=>[h,headers.indexOf(h)]));
+    const grouped=new Map();
+
+    for(let r=1;r<rows.length;r++){
+      const row=rows[r];
+      if(row.every(x=>!String(x||'').trim())) continue;
+      const program=String(row[idx.program]||'').trim();
+      const id=String(row[idx.id]||'').trim();
+      const parentId=String(row[idx.parent_id]||'').trim();
+      const type=String(row[idx.type]||'').trim().toLowerCase();
+      const title=String(row[idx.title]||'').trim();
+      const start=parseTimeOffset(String(row[idx.start]||''));
+      let end=parseTimeOffset(String(row[idx.end]||''));
+      const pinned=/^(1|true|yes|y)$/i.test(String(row[idx.pinned]||'').trim());
+      if(!program || !id || !title || start===null || end===null || !['task','box','subtask'].includes(type)){
+        alert(`Invalid CSV data on row ${r+1}`); return;
+      }
+      if(end<=start) end+=1440;
+      if(type==='subtask' && !parentId){ alert(`Row ${r+1}: subtask needs parent_id`); return; }
+      if(type!=='subtask' && parentId){ alert(`Row ${r+1}: only subtask rows may have parent_id`); return; }
+      if(!grouped.has(program)) grouped.set(program,[]);
+      grouped.get(program).push({templateId:id,parentTemplateId:type==='subtask'?parentId:null,title,startOffsetMin:start,endOffsetMin:end,isBox:type==='box',pinned});
+    }
+
+    if(grouped.size===0){ alert('No program rows found'); return }
+    for(const [name,parts] of grouped){
+      const ids=new Set();
+      for(const part of parts){
+        if(ids.has(part.templateId)){ alert(`Program “${name}” has duplicate id: ${part.templateId}`); return; }
+        ids.add(part.templateId);
+      }
+      for(const part of parts){
+        if(part.parentTemplateId && !ids.has(part.parentTemplateId)){ alert(`Program “${name}”: missing parent_id ${part.parentTemplateId}`); return; }
+      }
+    }
+
+    const programs=loadPrograms(activeProfileId);
+    const existingNames=new Set(programs.map(p=>p.name.toLowerCase()));
+    let firstId=null;
+    for(const [rawName,parts] of grouped){
+      const name=uniqueProgramName(rawName,existingNames);
+      existingNames.add(name.toLowerCase());
+      const p={id:uid(),name,createdAt:Date.now(),parts:parts.sort((a,b)=>a.startOffsetMin-b.startOffsetMin)};
+      programs.push(p);
+      if(!firstId) firstId=p.id;
+    }
+    savePrograms(activeProfileId,programs,true);
+    programSelect.value=firstId||'';
+    updateProgramSummary();
+    programCsvFile.value='';
+    showToast(`Imported ${grouped.size} program(s)`);
+  }
+
+  saveProgramFromDayBtn.addEventListener('click',saveCurrentDayAsProgram);
+  applyProgramBtn.addEventListener('click',applySelectedProgram);
+  deleteProgramBtn.addEventListener('click',deleteSelectedProgram);
+  exportProgramBtn.addEventListener('click',exportSelectedProgram);
+  importProgramCsvBtn.addEventListener('click',importProgramsFromCsv);
+
+  // Start app
   ensureProfiles();
-  const nowMs = now();
-  startI.value = toInputLocal(nowMs);
-  endI.value = toInputLocal(nowMs + 30*60000);
+  const nowMs=now();
+  startI.value=toInputLocal(nowMs);
+  endI.value=toInputLocal(nowMs+30*60000);
+  const today=dateKey(nowMs);
+  noteDate.value=today;
+  programDate.value=today;
   scheduleNotifications();
 
-  // expose for debugging
-  window.__timeline = {
-    loadTasks: ()=> loadTasks(activeProfileId),
-    saveTasks: (tasks)=> saveTasks(activeProfileId, tasks),
-    applyDelayToAll, applyDelayToUpcoming, scheduleNotifications
+  window.__timeline={
+    loadTasks:()=>loadTasks(activeProfileId),
+    saveTasks:(tasks)=>saveTasks(activeProfileId,tasks),
+    loadPrograms:()=>loadPrograms(activeProfileId),
+    applyDelayToAll,
+    applyDelayToUpcoming,
+    scheduleNotifications
   };
-
-  // --- SAFE MutationObserver: observe ONLY #timeline and debounce; do NOT call renderNotes inside to avoid loop ---
-  (function setupSafeObserver(){
-    try{
-      const timelineEl = document.getElementById('timeline');
-      if(!timelineEl) return;
-      let timer = null;
-      const observer = new MutationObserver((muts)=>{
-        if(timer) clearTimeout(timer);
-        timer = setTimeout(()=>{
-          try{
-            // Attach add-subtask handlers to any newly added .box elements (non-intrusive)
-            const boxes = Array.from(timelineEl.querySelectorAll('.box'));
-            boxes.forEach(box=>{
-              const addBtn = Array.from(box.querySelectorAll('button')).find(b=> (b.textContent||'').toLowerCase().includes('add subtask'));
-              if(addBtn && !addBtn._tsenhAttached){
-                addBtn._tsenhAttached = true;
-                addBtn.addEventListener('click', ()=> {
-                  // safe-get times
-                  let defaultStart = Date.now(), defaultEnd = Date.now() + 30*60000;
-                  try{
-                    const small = box.querySelector('.small');
-                    if(small){
-                      const parts = small.textContent.split('—').map(p=>p.trim());
-                      if(parts[0]){ const p0 = new Date(parts[0].replace(' ', 'T')); if(!isNaN(p0)) defaultStart = p0.getTime(); }
-                      if(parts[1]){ const p1 = new Date(parts[1].replace(' ', 'T')); if(!isNaN(p1)) defaultEnd = p1.getTime(); }
-                    }
-                  }catch(e){}
-                  if(defaultEnd <= defaultStart) defaultEnd = defaultStart + 30*60000;
-                  openSubtaskModalForBox(box.dataset.id, defaultStart, defaultEnd);
-                });
-              }
-            });
-          }catch(e){
-            // swallow to avoid breaking page
-            console.warn('SafeObserver callback error', e);
-          }
-        }, 120); // debounce
-      });
-      observer.observe(timelineEl, { childList:true, subtree:true });
-      // store to window for debug if needed
-      window.__safeObserver = observer;
-    }catch(e){ console.warn('Failed to setup safe observer', e); }
-  })();
-
 })();
 </script>
 </body>
