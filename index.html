@@ -5613,7 +5613,338 @@ return d.getTime();
 /* تست دستی در کنسول */
 
 window.autoScheduler=autoScheduler;
+/* =====================================================
+ AUTO SCHEDULER UI CONNECTOR
+===================================================== */
 
+
+let autoSpecialties=[];
+let autoGenerals=[];
+
+
+
+function createAutoSubject(type){
+
+
+let title=prompt(
+type==="specialty"
+?"نام درس تخصصی:"
+:"نام درس عمومی:"
+);
+
+
+if(!title) return;
+
+
+
+let weight=Number(
+prompt(
+"Weight (0-10):",
+"5"
+)
+)||1;
+
+
+
+let repeat=Number(
+prompt(
+"Repeat:",
+"2"
+)
+)||1;
+
+
+
+let subject={
+
+id:
+Date.now()+Math.random(),
+
+title:title,
+
+weight:weight,
+
+repeat:repeat
+
+};
+
+
+
+if(type==="specialty"){
+
+autoSpecialties.push(subject);
+
+}
+
+else{
+
+autoGenerals.push(subject);
+
+}
+
+
+
+renderAutoSubjects();
+
+
+}
+
+
+
+
+
+function renderAutoSubjects(){
+
+
+let box=
+document.getElementById(
+"autoSubjectList"
+);
+
+
+if(!box) return;
+
+
+box.innerHTML="";
+
+
+
+[
+...autoSpecialties.map(
+x=>({...x,type:"specialty"})
+),
+
+...autoGenerals.map(
+x=>({...x,type:"general"})
+)
+
+]
+.forEach(
+s=>{
+
+
+let div=
+document.createElement("div");
+
+
+div.className="badge";
+
+
+div.innerHTML=
+
+`
+${s.title}
+
+<br>
+
+Weight:${s.weight}
+
+<br>
+
+Repeat:${s.repeat}
+
+`;
+
+
+
+box.appendChild(div);
+
+
+
+});
+
+}
+
+
+
+
+
+function generateAutomaticPlan(){
+
+
+
+let start=
+document.querySelector(
+"#schedulerPopup input[type=time]"
+)
+?.value
+||"09:00";
+
+
+
+let endInputs=
+document.querySelectorAll(
+"#schedulerPopup input[type=time]"
+);
+
+
+let end=
+endInputs[1]?.value
+||"01:00";
+
+
+
+let rest=
+Number(
+document.querySelector(
+"#schedulerPopup input[type=number]"
+)?.value
+)
+||10;
+
+
+
+let pattern=
+document.querySelector(
+"#schedulerPopup select"
+)
+?.value
+.includes("Specialty")
+?
+"SG"
+:
+"GS";
+
+
+
+let date=
+new Date();
+
+
+let result=
+autoScheduler.generate({
+
+date:date,
+
+startTime:start,
+
+endTime:end,
+
+rest,
+
+pattern,
+
+specialties:autoSpecialties,
+
+generals:autoGenerals
+
+});
+
+
+
+if(!result.length){
+
+alert(
+"Unable to generate plan"
+);
+
+return;
+
+}
+
+
+
+/*
+ تبدیل به Task برنامه
+*/
+
+
+let tasks=
+loadApp();
+
+
+
+result.forEach(t=>{
+
+
+tasks.push({
+
+id:
+Date.now()+Math.random(),
+
+
+title:t.title,
+
+
+start:t.start,
+
+
+end:t.end,
+
+
+weight:t.weight,
+
+
+locked:false,
+
+
+color:null
+
+
+});
+
+
+});
+
+
+
+saveApp(tasks);
+
+
+renderTimeline();
+
+
+
+alert(
+"Automatic schedule created"
+);
+
+
+}
+
+
+
+
+
+/*
+ اتصال دکمه ها
+*/
+
+
+document.addEventListener(
+"click",
+function(e){
+
+
+
+if(
+e.target.innerText
+.includes("Generate Preview")
+){
+
+
+generateAutomaticPlan();
+
+
+}
+
+
+
+});
+
+
+
+
+
+window.autoSubjects={
+
+addSpecialty:
+()=>createAutoSubject("specialty"),
+
+addGeneral:
+()=>createAutoSubject("general")
+
+};
 </script>
 
 </div>
