@@ -695,30 +695,58 @@
   // Smart delay
   // ----------------------------
   function allocateWeighted(bases,weights,capacity){
-    const total=bases.reduce((a,b)=>a+b,0);if(capacity>=total)return bases.slice();if(capacity<=0)return bases.map(()=>0);
-    let lo=0,hi=1;const sumAt=l=>bases.reduce((a,b,i)=>a+Math.min(b,l*b*Math.max(.1,weights[i])),0);while(sumAt(hi)<capacity)hi*=2;
-    for(let k=0;k<80;k++){const mid=(lo+hi)/2;if(sumAt(mid)<capacity)lo=mid;else hi=mid}
-    const lam=(lo+hi)/2;const out=bases.map((b,i)=>Math.min(b,lam*b*Math.max(.1,weights[i])));const diff=capacity-out.reduce((a,b)=>a+b,0);if(Math.abs(diff)>1&&out.length){for(let i=out.length-1;i>=0;i--){const room=bases[i]-out[i];if(room>0){const add=Math.min(room,diff);out[i]+=add;break}}}return out;
+    const totalWeight=weights.reduce((a,b)=>a+Math.max(0.1,b),0);
+    if(capacity<=0)return bases.map(()=>0);
+    return weights.map(w=>capacity*(Math.max(0.1,w)/totalWeight));
   }
   function buildSmartDelayPlan(minutes){
-    const delayMin=parseFloat(minutes||'0');if(!isFinite(delayMin)||delayMin<=0)throw new Error('Enter delay minutes > 0');
-    const delayMs=delayMin*60000,nowMs=now(),tasks=normalizeTasks(loadTasks(activeProfileId));
-    const flex=tasks.filter(t=>!t.parentId&&!t.pinned&&t.status==='pending').sort((a,b)=>taskFirstStart(a)-taskFirstStart(b));if(!flex.length)throw new Error('No pending flexible tasks found');
-    const virtualNow=nowMs-delayMs;
+    const delayMin=parseFloat(minutes||'0');
+    if(!isFinite(delayMin)||delayMin<=0)throw new Error('Enter delay minutes > 0');
+    const nowMs=now(),tasks=normalizeTasks(loadTasks(activeProfileId));
+    const flex=tasks.filter(t=>!t.parentId&&!t.pinned&&t.status==='pending').sort((a,b)=>taskFirstStart(a)-taskFirstStart(b));
+    if(!flex.length)throw new Error('No pending flexible tasks found');
+    const virtualNow=nowMs-delayMin*60000;
     let activeIndex=flex.findIndex(t=>taskFirstStart(t)<=virtualNow&&virtualNow<taskLastEnd(t));
     if(activeIndex<0)activeIndex=flex.findIndex(t=>taskLastEnd(t)>virtualNow);
-    if(activeIndex<0)throw new Error('No remaining task matches this delay');
-    const candidates=flex.slice(activeIndex);const active=candidates[0];
-    const dayEndMs=resolveDayEnd(taskFirstStart(active),els.dayEnd.value||loadSettings().defaultDayEnd||DEFAULT_DAY_END);if(!dayEndMs)throw new Error('Invalid Day ends at time');if(dayEndMs<=nowMs)throw new Error('Day end has already passed');
+    if(activeIndex<0)activeIndex=0;
+    const candidates=flex.slice(activeIndex);
+    const active=candidates[0];
+    const dayEndMs=resolveDayEnd(taskFirstStart(active),els.dayEnd.value||loadSettings().defaultDayEnd||DEFAULT_DAY_END);
+    if(!dayEndMs||dayEndMs<=nowMs)throw new Error('Invalid Day ends at time');
+
     const locks=tasks.filter(t=>!t.parentId&&t.pinned&&t.status!=='skipped').flatMap(t=>getSegments(t)).filter(s=>s.end>nowMs&&s.start<dayEndMs);
-    const freeIntervals=buildFreeIntervals(nowMs,dayEndMs,locks),freeFuture=totalIntervalDuration(freeIntervals);
+    const freeIntervals=buildFreeIntervals(nowMs,dayEndMs,locks);
+    const freeFuture=totalIntervalDuration(freeIntervals);
     const completedActive=Math.min(taskDuration(active),taskPlannedElapsedUntil(active,virtualNow));
-    const bases=candidates.map(taskDuration),weights=candidates.map(t=>(Number(t.priority)||100)/100),sumBase=bases.reduce((a,b)=>a+b,0);
-    const capacityTotal=Math.min(sumBase,freeFuture+completedActive);const targetTotals=allocateWeighted(bases,weights,capacityTotal);
+
+    // Smart Rebalance: do NOT use original durations as a ceiling.
+    // The entire remaining available time is redistributed by priority.
+    const weights=candidates.map(t=>(Number(t.priority)||100)/100);
+    const capacityTotal=freeFuture+completedActive;
+    const targetTotals=allocateWeighted(candidates.map(()=>0),weights,capacityTotal);
     const remaining=targetTotals.map((x,i)=>Math.max(0,x-(i===0?completedActive:0)));
-    const state={idx:0,cursor:freeIntervals[0]?.start||nowMs};const newSegmentsById={};let overflow=0;
-    remaining.forEach((dur,i)=>{const a=allocateAcrossFreeIntervals(dur,freeIntervals,state);newSegmentsById[candidates[i].id]=a.segments;overflow+=a.unallocated});
-    return{createdAt:Date.now(),delayMin,nowMs,dayEndMs,completedActive,freeFuture,locks:mergedIntervals(locks),freeIntervals,candidateIds:candidates.map(t=>t.id),bases,targetTotals,remaining,newSegmentsById,overflow,tasksSnapshot:deepClone(tasks),rows:candidates.map((t,i)=>({id:t.id,title:t.title,priority:t.priority||100,before:bases[i],target:targetTotals[i],completed:i===0?completedActive:0,after:remaining[i]}))};
+
+    const state={idx:0,cursor:freeIntervals[0]?.start||nowMs};
+    const newSegmentsById={};
+    let overflow=0;
+    remaining.forEach((dur,i)=>{
+      const a=allocateAcrossFreeIntervals(dur,freeIntervals,state);
+      newSegmentsById[candidates[i].id]=a.segments;
+      overflow+=a.unallocated;
+    });
+
+    return {
+      createdAt:Date.now(),delayMin,nowMs,dayEndMs,completedActive,freeFuture,
+      locks:mergedIntervals(locks),freeIntervals,
+      candidateIds:candidates.map(t=>t.id),
+      targetTotals,remaining,newSegmentsById,overflow,
+      tasksSnapshot:deepClone(tasks),
+      rows:candidates.map((t,i)=>({
+        id:t.id,title:t.title,priority:t.priority||100,
+        before:taskDuration(t),target:targetTotals[i],
+        completed:i===0?completedActive:0,after:remaining[i]
+      }))
+    };
   }
   function showSmartPreview(plan){
     pendingSmartPlan=plan;els.smartPreviewStats.innerHTML='';const stats=[['Delay',plan.delayMin+'m'],['Day ends at',fmtTime(plan.dayEndMs)],['Free time from now',fmtDuration(plan.freeFuture)],['Locked time remaining',fmtDuration(plan.locks.reduce((a,x)=>a+x.end-x.start,0))],['Estimated completed in current task',fmtDuration(plan.completedActive)]];for(const [a,b] of stats){const l=document.createElement('div');l.textContent=a;const r=document.createElement('div');r.style.fontWeight='700';r.textContent=b;els.smartPreviewStats.append(l,r)}
