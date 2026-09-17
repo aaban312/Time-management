@@ -6027,6 +6027,244 @@ addGeneral:
 ()=>createAutoSubject("general")
 
 };
+/* =====================================================
+ AUTO SCHEDULER TIMELINE CONNECTOR v2
+===================================================== */
+
+
+function generateAutomaticPlan(){
+
+
+const start=
+document.getElementById("autoStart").value
+||"09:00";
+
+
+const end=
+document.getElementById("autoEnd").value
+||"01:00";
+
+
+const rest=
+Number(
+document.getElementById("autoRest").value
+)
+||0;
+
+
+
+const pattern=
+document.getElementById("autoPattern").value;
+
+
+
+if(
+autoSpecialties.length===0 &&
+autoGenerals.length===0
+){
+
+alert(
+"ابتدا حداقل یک درس اضافه کن"
+);
+
+return;
+
+}
+
+
+
+const today=
+new Date();
+
+
+
+const generated=
+autoScheduler.generate({
+
+date:today,
+
+startTime:start,
+
+endTime:end,
+
+rest:rest,
+
+pattern:pattern,
+
+specialties:autoSpecialties,
+
+generals:autoGenerals
+
+});
+
+
+
+if(!generated.length){
+
+alert(
+"برنامه ساخته نشد"
+);
+
+return;
+
+}
+
+
+
+
+let tasks=
+loadApp();
+
+
+
+generated.forEach(item=>{
+
+
+tasks.push({
+
+id:
+Date.now()+Math.random(),
+
+
+title:
+item.title,
+
+
+start:
+item.start,
+
+
+end:
+item.end,
+
+
+weight:
+item.weight,
+
+
+locked:false,
+
+
+type:
+item.type,
+
+
+color:null
+
+
+});
+
+
+});
+
+
+
+
+saveApp(tasks);
+
+
+
+renderTimeline();
+
+
+
+showAutoPreview(generated);
+
+
+}
+
+
+
+
+
+
+
+function showAutoPreview(data){
+
+
+
+let text=
+"برنامه ساخته شد:\n\n";
+
+
+
+data.forEach(x=>{
+
+
+text+=
+
+`${x.title}
+${formatTime(x.start)}
+-
+${formatTime(x.end)}
+Weight:${x.weight}
+
+`;
+
+});
+
+
+
+alert(text);
+
+
+
+}
+
+
+
+
+
+
+
+function formatTime(ms){
+
+
+const d=
+new Date(ms);
+
+
+return (
+
+String(d.getHours())
+.padStart(2,"0")
+
++
+
+":"
+
++
+
+String(d.getMinutes())
+.padStart(2,"0")
+
+);
+
+
+}
+
+
+
+
+
+
+
+document
+.addEventListener(
+"click",
+function(e){
+
+
+if(
+e.target.id==="generateSchedule"
+){
+
+generateAutomaticPlan();
+
+}
+
+
+});
 </script>
 
 </div>
