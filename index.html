@@ -89,9 +89,9 @@
   .note-row{display:grid;grid-template-columns:auto 120px 1fr auto;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--border-soft)}
   .pin{background:#f3e8ff;color:#6b21a8;padding:6px 8px;border-radius:6px;border:none}
   html[data-mode="dark"] .pin{background:#35254a;color:#d8b4fe}
-  .box{border-left:6px solid var(--accent-2);background:linear-gradient(90deg,var(--accent-soft),transparent);padding:10px;border-radius:8px;margin:10px 0}
+  .box{border-left:4px solid var(--accent-2);background:linear-gradient(90deg,var(--accent-soft),transparent);padding:6px 8px;border-radius:8px;margin:6px 0}
   .box-header{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px}
-  .box-subtask{background:var(--surface);padding:8px;border-radius:6px;margin:6px 0;border:1px solid var(--border-soft)}
+  .box-subtask{background:var(--surface);padding:5px 7px;border-radius:6px;margin:4px 0;border:1px solid var(--border-soft)}
   .profile-select{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
   .badge{background:var(--surface-2);padding:5px 8px;border-radius:999px;border:1px solid var(--border);font-size:12px}
   .badge.done{color:var(--success)}
@@ -109,13 +109,13 @@
   .task-controls{display:flex;gap:5px;align-items:center;flex-wrap:nowrap;padding-top:2px;overflow-x:auto;scrollbar-width:none}
   .task-controls::-webkit-scrollbar{display:none}
   .task-controls label{display:flex;align-items:center;gap:3px;flex:0 0 auto}
-  .priority-input{width:58px;padding:5px 6px;text-align:center}
-  .status-select{width:auto;min-width:92px;padding:5px 6px}
+  .priority-input{width:42px;padding:3px;text-align:center}
+  .status-select{width:auto;min-width:72px;padding:3px 4px}
   .icon-btn{width:34px;min-width:34px;height:34px;min-height:34px!important;padding:0!important;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;font-size:16px;line-height:1;flex:0 0 34px}
   .task-toolbar{display:flex;align-items:center;gap:5px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-top:3px}
   .task-toolbar::-webkit-scrollbar{display:none}
-  .task-toolbar .priority-input{width:58px;min-width:58px}
-  .task-toolbar .status-select{min-width:92px;max-width:104px}
+  .task-toolbar .priority-input{width:42px;min-width:42px}
+  .task-toolbar .status-select{min-width:72px;max-width:82px}
   .task-toolbar .compact-label{display:flex;align-items:center;gap:3px;flex:0 0 auto;font-size:11px;color:var(--muted)}
   .task-toolbar button,.task-toolbar input,.task-toolbar select{min-height:34px!important;font-size:13px}
   .range-list{display:flex;flex-wrap:wrap;gap:4px 7px;margin-top:2px}
@@ -178,19 +178,13 @@
   @media (max-width:390px){
     .profile-select,.program-actions,.box-subtask .actions,.smart-actions{grid-template-columns:1fr}
   }
-
-.menu-wrap{position:relative}
-.more-menu{position:absolute;right:0;top:42px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px;z-index:4000;box-shadow:var(--shadow);min-width:180px}
-.more-menu button{display:block;width:100%;margin:4px 0;text-align:left}
-.program-color-box{border-radius:12px;padding:12px;border:1px solid var(--border)}
-
 </style>
 </head>
 <body>
 <header>
   <div>
     <h1>Timeline Scheduler</h1>
-    <div class="muted">Smart delay, reusable programs, priorities, boxes & CSV.</div>
+    <div class="muted">Smart scheduling, reusable programs, priorities, boxes & CSV.</div>
   </div>
   <div class="profile-select">
     <label class="small muted">Profile:</label>
@@ -199,18 +193,20 @@
     <button id="renameProfile" class="ghost">Rename</button>
     <button id="deleteProfile" class="ghost">Delete</button>
     <button id="settingsBtn" class="ghost">⚙ Settings</button>
-    <div class="menu-wrap">
-      <button id="moreMenuBtn" class="ghost icon-btn">⋮</button>
-      <div id="moreMenu" class="more-menu" style="display:none">
-        <button id="menuReady">Ready Programs</button>
-        <button id="menuDelay">Smart Delay</button>
-        <button id="menuAddProgram">Add Program</button>
-      </div>
-    </div>
   </div>
 </header>
 
 <hr />
+
+<section id="notebook" class="card" style="margin-bottom:12px">
+  <h2 style="margin:0 0 8px">TO-DO</h2>
+  <div class="row mobile-stack" style="gap:8px">
+    <input type="date" id="noteDate" />
+    <input id="noteText" placeholder="Take quick note..." style="flex:1" />
+    <button id="addNote">Add note :)</button>
+  </div>
+  <div id="notesList" style="margin-top:12px"></div>
+</section>
 
 <section id="programsPanel" class="card" style="margin-bottom:12px">
   <h2 style="margin:0 0 4px">Ready Programs</h2>
@@ -230,13 +226,9 @@
     </label>
   </div>
   <div id="programSummary" class="program-summary small muted">No program selected.</div>
-  <label class="field" style="margin-top:8px">Program color
-    <input id="programColorPicker" type="color" value="#2563eb">
-  </label>
   <div class="program-actions">
     <button id="applyProgram">Apply to day</button>
     <button id="saveProgramFromDay" class="secondary">Save this day as program</button>
-    <button id="renameProgram" class="secondary">Rename program</button>
     <button id="deleteProgram" class="danger">Delete program</button>
     <button id="exportProgram" class="ghost">Export selected CSV</button>
   </div>
@@ -270,7 +262,7 @@
 <section class="card" style="margin-top:12px">
   <h2 style="margin:0 0 8px">Delay Control</h2>
   <div class="smart-controls">
-    <label class="field">Delay / lost time (minutes)
+    <label class="field">Required rest time (minutes)
       <input id="delay" type="number" min="0" step="1" placeholder="30" />
     </label>
     <label class="field">Day ends at
@@ -278,17 +270,16 @@
     </label>
   </div>
   <div class="smart-actions">
-    <button id="normalDelay" class="ghost">Normal Delay</button>
     <button id="smartDelay">Smart Delay</button>
   </div>
   <div class="row" style="margin-top:8px;justify-content:space-between;flex-wrap:wrap">
-    <div class="small muted">Locked tasks never move. Smart Delay may split a flexible task around locked time.</div>
+    <div class="small muted">Locked tasks never move. Smart Delay recalculates remaining tasks using their priorities.</div>
     <button id="undoSmartDelay" class="ghost" disabled>Undo Smart Delay</button>
   </div>
 </section>
 
 <div class="timeline" id="timeline"></div>
-<footer>Tip: raise Priority above 100% for subjects you want Smart Delay to protect more strongly.</footer>
+<footer>Tip: Priority controls how remaining time is distributed by Smart Delay.</footer>
 <div id="toast" class="toast"></div>
 
 <div id="editModal" style="display:none" class="modal-overlay">
@@ -348,9 +339,6 @@
       </label>
       <label class="field">Default day end
         <input id="defaultDayEnd" type="time" />
-      </label>
-      <label class="field">Clock & date font size
-        <input id="clockFontSize" type="number" min="10" max="40" value="16">
       </label>
       <label class="field">Theme
         <select id="themeSelect">
@@ -745,11 +733,25 @@
   }
   function undoSmartDelay(){const stack=loadUndoStack(activeProfileId);if(!stack.length){showToast('Nothing to undo');return}const snap=stack.pop();saveUndoStack(activeProfileId,stack);saveTasks(activeProfileId,snap.tasks,{toast:false});showToast('Smart delay undone')}
   function updateUndoButton(){if(!els.undoSmartDelay)return;els.undoSmartDelay.disabled=!activeProfileId||loadUndoStack(activeProfileId).length===0}
-  els.smartDelay.onclick=()=>{try{showSmartPreview(buildSmartDelayPlan(els.delay.value))}catch(e){alert(e.message||'Could not calculate Smart Delay')}};
+  function calculateSmartDelayFromRemainingTime(){
+    const rest=Math.max(0,Number(els.delay.value)||0)*60000;
+    const nowMs=now();
+    const dayEnd=resolveDayEnd(nowMs,els.dayEnd.value||loadSettings().defaultDayEnd||DEFAULT_DAY_END);
+    if(!dayEnd || dayEnd<=nowMs) throw new Error('Invalid day end');
+    const available=Math.max(0,dayEnd-nowMs-rest);
+    const tasks=normalizeTasks(loadTasks(activeProfileId)).filter(t=>!t.parentId&&t.status==='pending'&&!t.pinned);
+    const remaining=tasks.reduce((a,t)=>a+taskDuration(t),0);
+    const lost=Math.max(0,remaining-available);
+    return Math.ceil(lost/60000);
+  }
+  els.smartDelay.onclick=()=>{try{
+    const autoDelay=calculateSmartDelayFromRemainingTime();
+    if(autoDelay<=0){showToast('No delay needed');return}
+    showSmartPreview(buildSmartDelayPlan(autoDelay));
+  }catch(e){alert(e.message||'Could not calculate Smart Delay')}};
   els.smartPreviewCancel.onclick=()=>{els.smartPreviewModal.style.display='none';pendingSmartPlan=null};
   els.smartPreviewApply.onclick=()=>applySmartPlan(pendingSmartPlan);
   els.undoSmartDelay.onclick=undoSmartDelay;
-  els.normalDelay.onclick=()=>applyNormalDelay(els.delay.value);
 
   // ----------------------------
   // Notes & notifications
@@ -778,29 +780,7 @@
   async function importProgramsFromCsv(){
     const file=els.programCsvFile.files&&els.programCsvFile.files[0];if(!file){alert('Choose a CSV file first');return}let text;try{text=await file.text()}catch(e){alert('Could not read CSV file');return}text=text.replace(/^\uFEFF/,'');const rows=parseCsv(text);if(rows.length<2){alert('CSV has no data rows');return}const headers=rows[0].map(x=>x.trim().toLowerCase()),required=['program','id','parent_id','type','title','start','end','pinned'],missing=required.filter(h=>!headers.includes(h));if(missing.length){alert('Missing CSV column(s): '+missing.join(', '));return}const idx=Object.fromEntries(required.map(h=>[h,headers.indexOf(h)]));idx.priority=headers.indexOf('priority');const grouped=new Map();for(let r=1;r<rows.length;r++){const row=rows[r];if(row.every(x=>!String(x||'').trim()))continue;const program=String(row[idx.program]||'').trim(),id=String(row[idx.id]||'').trim(),parentId=String(row[idx.parent_id]||'').trim(),type=String(row[idx.type]||'').trim().toLowerCase(),title=String(row[idx.title]||'').trim(),start=parseTimeOffset(String(row[idx.start]||''));let end=parseTimeOffset(String(row[idx.end]||''));const pinned=/^(1|true|yes|y)$/i.test(String(row[idx.pinned]||'').trim()),priority=idx.priority>=0?clamp(Number(row[idx.priority])||100,10,500):100;if(!program||!id||!title||start===null||end===null||!['task','box','subtask'].includes(type)){alert(`Invalid CSV data on row ${r+1}`);return}if(end<=start)end+=1440;if(type==='subtask'&&!parentId){alert(`Row ${r+1}: subtask needs parent_id`);return}if(type!=='subtask'&&parentId){alert(`Row ${r+1}: only subtask rows may have parent_id`);return}if(!grouped.has(program))grouped.set(program,[]);grouped.get(program).push({templateId:id,parentTemplateId:type==='subtask'?parentId:null,title,startOffsetMin:start,endOffsetMin:end,isBox:type==='box',pinned,priority})}if(!grouped.size){alert('No program rows found');return}for(const[name,parts]of grouped){const ids=new Set();for(const part of parts){if(ids.has(part.templateId)){alert(`Program “${name}” has duplicate id: ${part.templateId}`);return}ids.add(part.templateId)}for(const part of parts){if(part.parentTemplateId&&!ids.has(part.parentTemplateId)){alert(`Program “${name}”: missing parent_id ${part.parentTemplateId}`);return}}}const programs=loadPrograms(activeProfileId),existing=new Set(programs.map(p=>p.name.toLowerCase()));let firstId=null;for(const[raw,parts]of grouped){const name=uniqueProgramName(raw,existing);existing.add(name.toLowerCase());const p={id:uid(),name,createdAt:Date.now(),parts:parts.sort((a,b)=>a.startOffsetMin-b.startOffsetMin)};programs.push(p);if(!firstId)firstId=p.id}savePrograms(activeProfileId,programs,true);els.programSelect.value=firstId||'';updateProgramSummary();els.programCsvFile.value='';showToast(`Imported ${grouped.size} program(s)`)
   }
-
-  const renameProgramBtn=document.getElementById('renameProgram');
-  if(renameProgramBtn){
-    renameProgramBtn.onclick=()=>{
-      const ps=loadPrograms(activeProfileId);
-      const p=ps.find(x=>x.id===els.programSelect.value);
-      if(!p)return alert('Choose a program');
-      const n=prompt('New program name',p.name);
-      if(n){p.name=n.trim();savePrograms(activeProfileId,ps);}
-    };
-  }
   els.saveProgramFromDay.onclick=saveCurrentDayAsProgram;els.applyProgram.onclick=applySelectedProgram;els.deleteProgram.onclick=deleteSelectedProgram;els.exportProgram.onclick=exportSelectedProgram;els.importProgramCsv.onclick=importProgramsFromCsv;
-
-
-  // Added UI improvements
-  (function(){
-    const menuBtn=document.getElementById('moreMenuBtn');
-    const menu=document.getElementById('moreMenu');
-    if(menuBtn){
-      menuBtn.onclick=()=>menu.style.display=menu.style.display==='none'?'block':'none';
-      document.addEventListener('click',e=>{if(!menu.contains(e.target)&&e.target!==menuBtn)menu.style.display='none'});
-    }
-  })();
 
   // ----------------------------
   // Wiring/start
