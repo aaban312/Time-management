@@ -1682,7 +1682,7 @@ id="autoSubjectList">
 
 
 <button
-onclick="generateAutomaticPlan()">
+id="generateSchedule">
 
 Generate Preview
 
@@ -2466,28 +2466,6 @@ return Math.floor(ms/60000);
 
 
 
-function formatTime(ms){
-
-
-let d=new Date(ms);
-
-
-return d.getHours()
-.toString()
-.padStart(2,"0")
-
-+
-
-":"
-
-+
-
-d.getMinutes()
-.toString()
-.padStart(2,"0");
-
-
-}
 
 
 
@@ -5931,8 +5909,8 @@ return;
 */
 
 
-let tasks=
-loadApp();
+let tasks =
+appState.tasks;
 
 
 
@@ -6027,75 +6005,7 @@ addGeneral:
 ()=>createAutoSubject("general")
 
 };
-/* =====================================================
- AUTO SCHEDULER TIMELINE CONNECTOR v2
-===================================================== */
 
-
-function generateAutomaticPlan(){
-
-
-const start=
-document.getElementById("autoStart").value
-||"09:00";
-
-
-const end=
-document.getElementById("autoEnd").value
-||"01:00";
-
-
-const rest=
-Number(
-document.getElementById("autoRest").value
-)
-||0;
-
-
-
-const pattern=
-document.getElementById("autoPattern").value;
-
-
-
-if(
-autoSpecialties.length===0 &&
-autoGenerals.length===0
-){
-
-alert(
-"ابتدا حداقل یک درس اضافه کن"
-);
-
-return;
-
-}
-
-
-
-const today=
-new Date();
-
-
-
-const generated=
-autoScheduler.generate({
-
-date:today,
-
-startTime:start,
-
-endTime:end,
-
-rest:rest,
-
-pattern:pattern,
-
-specialties:autoSpecialties,
-
-generals:autoGenerals
-
-});
 
 
 
@@ -6112,8 +6022,8 @@ return;
 
 
 
-let tasks=
-loadApp();
+let tasks =
+appState.tasks;
 
 
 
