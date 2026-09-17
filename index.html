@@ -262,6 +262,9 @@
 <section class="card" style="margin-top:12px">
   <h2 style="margin:0 0 8px">Delay Control</h2>
   <div class="smart-controls">
+    <label class="field">Normal delay (minutes)
+      <input id="normalDelay" type="number" min="0" step="1" placeholder="30" />
+    </label>
     <label class="field">Required rest time (minutes)
       <input id="delay" type="number" min="0" step="1" placeholder="30" />
     </label>
@@ -270,6 +273,7 @@
     </label>
   </div>
   <div class="smart-actions">
+    <button id="applyNormalDelay" class="ghost">Apply Delay</button>
     <button id="smartDelay">Smart Delay</button>
   </div>
   <div class="row" style="margin-top:8px;justify-content:space-between;flex-wrap:wrap">
@@ -438,7 +442,7 @@
 
   const els={
     profileSelect:document.getElementById('profileSelect'), addProfile:document.getElementById('addProfile'), renameProfile:document.getElementById('renameProfile'), deleteProfile:document.getElementById('deleteProfile'), settingsBtn:document.getElementById('settingsBtn'),
-    title:document.getElementById('title'), start:document.getElementById('start'), end:document.getElementById('end'), newTaskPriority:document.getElementById('newTaskPriority'), addBtn:document.getElementById('addBtn'), timeline:document.getElementById('timeline'), clearAll:document.getElementById('clearAll'), delay:document.getElementById('delay'), normalDelay:document.getElementById('normalDelay'), smartDelay:document.getElementById('smartDelay'), undoSmartDelay:document.getElementById('undoSmartDelay'), dayEnd:document.getElementById('dayEnd'), insertAfter:document.getElementById('insertAfter'), makeBox:document.getElementById('makeBox'), addSubtask:document.getElementById('addSubtask'),
+    title:document.getElementById('title'), start:document.getElementById('start'), end:document.getElementById('end'), newTaskPriority:document.getElementById('newTaskPriority'), addBtn:document.getElementById('addBtn'), timeline:document.getElementById('timeline'), clearAll:document.getElementById('clearAll'), delay:document.getElementById('delay'), normalDelay:document.getElementById('normalDelay'), applyNormalDelay:document.getElementById('applyNormalDelay'), smartDelay:document.getElementById('smartDelay'), undoSmartDelay:document.getElementById('undoSmartDelay'), dayEnd:document.getElementById('dayEnd'), insertAfter:document.getElementById('insertAfter'), makeBox:document.getElementById('makeBox'), addSubtask:document.getElementById('addSubtask'),
     noteDate:document.getElementById('noteDate'), noteText:document.getElementById('noteText'), addNote:document.getElementById('addNote'), notesList:document.getElementById('notesList'),
     programSelect:document.getElementById('programSelect'), programDate:document.getElementById('programDate'), programApplyMode:document.getElementById('programApplyMode'), programSummary:document.getElementById('programSummary'), applyProgram:document.getElementById('applyProgram'), saveProgramFromDay:document.getElementById('saveProgramFromDay'), deleteProgram:document.getElementById('deleteProgram'), exportProgram:document.getElementById('exportProgram'), programCsvFile:document.getElementById('programCsvFile'), importProgramCsv:document.getElementById('importProgramCsv'),
     settingsModal:document.getElementById('settingsModal'), uiScale:document.getElementById('uiScale'), uiScaleValue:document.getElementById('uiScaleValue'), appearanceSelect:document.getElementById('appearanceSelect'), defaultDayEnd:document.getElementById('defaultDayEnd'), themeSelect:document.getElementById('themeSelect'), settingsClose:document.getElementById('settingsClose'), resetSettings:document.getElementById('resetSettings'),
@@ -772,6 +776,28 @@
     const lost=Math.max(0,remaining-available);
     return Math.ceil(lost/60000);
   }
+  function applyNormalDelay(){
+    const m=Math.max(0,Number(els.normalDelay.value)||0);
+    if(!m){alert('Enter delay minutes');return}
+    const ms=m*60000;
+    const nowMs=now();
+    const tasks=normalizeTasks(loadTasks(activeProfileId));
+    for(const t of tasks){
+      if(t.pinned || t.status==='done') continue;
+      // keep locked tasks fixed
+      if(t.locked) continue;
+      if(t.end>nowMs){
+        t.start+=ms;
+        t.end+=ms;
+        if(t.segments) t.segments=t.segments.map(seg=>({start:seg.start+ms,end:seg.end+ms}));
+      }
+    }
+    saveTasks(activeProfileId,tasks);
+    els.normalDelay.value='';
+    showToast('Normal delay applied');
+  }
+  els.applyNormalDelay.onclick=applyNormalDelay;
+
   els.smartDelay.onclick=()=>{try{
     const autoDelay=calculateSmartDelayFromRemainingTime();
     if(autoDelay<=0){showToast('No delay needed');return}
