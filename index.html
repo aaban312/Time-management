@@ -1487,13 +1487,12 @@ Recalculate Timeline
 
 
 
+<!-- =========================
+ AUTO SCHEDULER POPUP v2
+========================= -->
 
-<!-- =================================================
-AUTOMATIC SCHEDULER
-================================================= -->
 
-
-<div
+<div 
 id="schedulerPopup"
 class="popup-overlay">
 
@@ -1502,39 +1501,28 @@ class="popup-overlay">
 
 
 <div class="popup-title">
-
-Automatic Scheduler
-
+🧠 Automatic Scheduler
 </div>
 
 
 
-
 <div class="setting-row">
-
 
 <span>
 Pattern
 </span>
 
 
+<select id="autoPattern">
 
-<select id="schedulePattern">
-
-
-<option value="sp">
-
-تخصصی - عمومی
-
+<option value="SG">
+تخصصی → عمومی
 </option>
 
 
-<option value="gs">
-
-عمومی - تخصصی
-
+<option value="GS">
+عمومی → تخصصی
 </option>
-
 
 
 </select>
@@ -1546,20 +1534,17 @@ Pattern
 
 
 
-
 <div class="setting-row">
 
-
 <span>
-Start
-
+Start Time
 </span>
 
 
-<input
-id="scheduleStart"
+<input 
+id="autoStart"
 type="time"
-value="08:00">
+value="09:00">
 
 
 </div>
@@ -1570,15 +1555,13 @@ value="08:00">
 
 <div class="setting-row">
 
-
 <span>
-End
-
+End Time
 </span>
 
 
-<input
-id="scheduleEnd"
+<input 
+id="autoEnd"
 type="time"
 value="01:00">
 
@@ -1591,17 +1574,16 @@ value="01:00">
 
 <div class="setting-row">
 
-
 <span>
-Rest
-
+Rest between lessons
 </span>
 
 
-<input
-id="scheduleRest"
+<input 
+id="autoRest"
 type="number"
-value="10">
+value="10"
+min="0">
 
 
 </div>
@@ -1610,9 +1592,110 @@ value="10">
 
 
 
-<button id="generateSchedule">
+<hr>
+
+
+
+
+
+<div class="popup-title"
+style="font-size:16px">
+
+Specialty Subjects
+
+</div>
+
+
+
+<button 
+class="secondary"
+onclick="autoSubjects.addSpecialty()">
+
++ Add Specialty
+
+</button>
+
+
+
+<div 
+id="autoSpecialtyList">
+
+</div>
+
+
+
+
+
+
+<hr>
+
+
+
+
+
+
+<div class="popup-title"
+style="font-size:16px">
+
+General Subjects
+
+</div>
+
+
+
+<button 
+class="secondary"
+onclick="autoSubjects.addGeneral()">
+
++ Add General
+
+</button>
+
+
+
+<div 
+id="autoGeneralList">
+
+</div>
+
+
+
+
+
+
+<hr>
+
+
+
+
+
+
+<div 
+id="autoSubjectList">
+
+
+</div>
+
+
+
+
+
+
+<button
+onclick="generateAutomaticPlan()">
 
 Generate Preview
+
+</button>
+
+
+
+
+
+<button 
+class="secondary">
+
+Close
 
 </button>
 
@@ -1622,7 +1705,6 @@ Generate Preview
 
 
 </div>
-
 
 
 
