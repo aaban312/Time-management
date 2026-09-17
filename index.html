@@ -178,6 +178,12 @@
   @media (max-width:390px){
     .profile-select,.program-actions,.box-subtask .actions,.smart-actions{grid-template-columns:1fr}
   }
+
+.menu-wrap{position:relative}
+.more-menu{position:absolute;right:0;top:42px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px;z-index:4000;box-shadow:var(--shadow);min-width:180px}
+.more-menu button{display:block;width:100%;margin:4px 0;text-align:left}
+.program-color-box{border-radius:12px;padding:12px;border:1px solid var(--border)}
+
 </style>
 </head>
 <body>
@@ -193,20 +199,18 @@
     <button id="renameProfile" class="ghost">Rename</button>
     <button id="deleteProfile" class="ghost">Delete</button>
     <button id="settingsBtn" class="ghost">⚙ Settings</button>
+    <div class="menu-wrap">
+      <button id="moreMenuBtn" class="ghost icon-btn">⋮</button>
+      <div id="moreMenu" class="more-menu" style="display:none">
+        <button id="menuReady">Ready Programs</button>
+        <button id="menuDelay">Smart Delay</button>
+        <button id="menuAddProgram">Add Program</button>
+      </div>
+    </div>
   </div>
 </header>
 
 <hr />
-
-<section id="notebook" class="card" style="margin-bottom:12px">
-  <h2 style="margin:0 0 8px">TO-DO</h2>
-  <div class="row mobile-stack" style="gap:8px">
-    <input type="date" id="noteDate" />
-    <input id="noteText" placeholder="Take quick note..." style="flex:1" />
-    <button id="addNote">Add note :)</button>
-  </div>
-  <div id="notesList" style="margin-top:12px"></div>
-</section>
 
 <section id="programsPanel" class="card" style="margin-bottom:12px">
   <h2 style="margin:0 0 4px">Ready Programs</h2>
@@ -226,9 +230,13 @@
     </label>
   </div>
   <div id="programSummary" class="program-summary small muted">No program selected.</div>
+  <label class="field" style="margin-top:8px">Program color
+    <input id="programColorPicker" type="color" value="#2563eb">
+  </label>
   <div class="program-actions">
     <button id="applyProgram">Apply to day</button>
     <button id="saveProgramFromDay" class="secondary">Save this day as program</button>
+    <button id="renameProgram" class="secondary">Rename program</button>
     <button id="deleteProgram" class="danger">Delete program</button>
     <button id="exportProgram" class="ghost">Export selected CSV</button>
   </div>
@@ -341,6 +349,9 @@
       <label class="field">Default day end
         <input id="defaultDayEnd" type="time" />
       </label>
+      <label class="field">Clock & date font size
+        <input id="clockFontSize" type="number" min="10" max="40" value="16">
+      </label>
       <label class="field">Theme
         <select id="themeSelect">
           <option value="ocean">Ocean</option>
@@ -416,14 +427,6 @@
     if(!t.status) t.status='pending';
     if(!Number.isFinite(Number(t.priority))) t.priority=100;
     t.priority=clamp(Number(t.priority)||100,10,500);
-    if(!Number.isFinite(Number(t.backlog))){
-  t.backlog=0;
-}
-
-t.backlog=Math.max(
-  0,
-  Number(t.backlog)||0
-);
     if(!Number.isFinite(Number(t.originalDurationMs)) || Number(t.originalDurationMs)<=0){
       const d=Math.max(0,Number(t.end)-Number(t.start));
       t.originalDurationMs=d;
@@ -649,9 +652,7 @@ t.backlog=Math.max(
   // CRUD/status/priority
   // ----------------------------
   function addTask(){
-    if(!activeProfileId){alert('No active profile');return}const title=els.title.value.trim(),s=parseDT(els.start.value),e=parseDT(els.end.value),priority=clamp(Number(els.newTaskPriority.value)||100,10,500);if(!title){alert('Title required');return}if(!s||!e||e<=s){alert('Start and end must be valid and end after start');return}const tasks=normalizeTasks(loadTasks(activeProfileId)),afterId=els.insertAfter.value;const newTask={id:uid(),title,start:s,end:e,segments:[{start:s,end:e}],pinned:false,isBox:!!els.makeBox.checked,color:els.makeBox.checked?'#60a5fa':null,parentId:null,priority,
-backlog:0,
-status:'pending',originalDurationMs:e-s};
+    if(!activeProfileId){alert('No active profile');return}const title=els.title.value.trim(),s=parseDT(els.start.value),e=parseDT(els.end.value),priority=clamp(Number(els.newTaskPriority.value)||100,10,500);if(!title){alert('Title required');return}if(!s||!e||e<=s){alert('Start and end must be valid and end after start');return}const tasks=normalizeTasks(loadTasks(activeProfileId)),afterId=els.insertAfter.value;const newTask={id:uid(),title,start:s,end:e,segments:[{start:s,end:e}],pinned:false,isBox:!!els.makeBox.checked,color:els.makeBox.checked?'#60a5fa':null,parentId:null,priority,status:'pending',originalDurationMs:e-s};
     if(!afterId)tasks.push(newTask);else{const top=tasks.filter(x=>!x.parentId).sort((a,b)=>taskFirstStart(a)-taskFirstStart(b)),i=top.findIndex(x=>x.id===afterId);if(i<0)tasks.push(newTask);else{const prev=top[i],dur=Math.max(15*60000,e-s);newTask.start=taskLastEnd(prev);newTask.end=newTask.start+dur;newTask.segments=[{start:newTask.start,end:newTask.end}];newTask.originalDurationMs=dur;const following=new Set(top.slice(i+1).map(x=>x.id));for(const t of tasks){if(t.pinned)continue;if(following.has(t.id)||(t.parentId&&following.has(t.parentId)))shiftTask(t,dur)}tasks.push(newTask)}}
     saveTasks(activeProfileId,tasks);els.title.value='';els.start.value='';els.end.value='';els.insertAfter.value='';els.makeBox.checked=false;els.newTaskPriority.value='100';
   }
@@ -682,9 +683,7 @@ status:'pending',originalDurationMs:e-s};
   els.deleteTaskModal.addEventListener('click',e=>{if(e.target===els.deleteTaskModal)closeDeleteTaskModal()});
   function deleteAll(){if(!activeProfileId||!confirm('Clear all tasks for this profile?'))return;localStorage.setItem(keyForProfile(activeProfileId),'[]');saveUndoStack(activeProfileId,[]);render();scheduleNotifications()}
   function openEditModal(id){const tasks=normalizeTasks(loadTasks(activeProfileId)),t=tasks.find(x=>x.id===id);if(!t){alert('Task not found');return}const modal=document.getElementById('editModal'),ms=document.getElementById('modalStart'),me=document.getElementById('modalEnd'),mp=document.getElementById('modalPriority');modal.style.display='flex';ms.value=toInputLocal(t.start);me.value=toInputLocal(t.end);mp.value=t.priority||100;document.getElementById('modalSave').onclick=()=>{const ns=parseDT(ms.value),ne=parseDT(me.value);if(!ns||!ne||ne<=ns){alert('Invalid times');return}t.start=ns;t.end=ne;t.segments=[{start:ns,end:ne}];t.priority=clamp(Number(mp.value)||100,10,500);if(!t.originalDurationMs)t.originalDurationMs=ne-ns;saveTasks(activeProfileId,tasks);modal.style.display='none'};document.getElementById('modalCancel').onclick=()=>modal.style.display='none'}
-  function openSubtaskModalForBox(boxId,defaultStart,defaultEnd){const modal=document.getElementById('subtaskModal');modal.style.display='flex';document.getElementById('subtaskTitle').value='';document.getElementById('subtaskStart').value=toInputLocal(defaultStart||Date.now());document.getElementById('subtaskEnd').value=toInputLocal(defaultEnd||((defaultStart||Date.now())+30*60000));document.getElementById('subtaskSave').onclick=()=>{const title=document.getElementById('subtaskTitle').value.trim(),s=parseDT(document.getElementById('subtaskStart').value),e=parseDT(document.getElementById('subtaskEnd').value);if(!title){alert('Title required');return}if(!s||!e||e<=s){alert('Invalid times');return}const tasks=normalizeTasks(loadTasks(activeProfileId));tasks.push({id:uid(),title,start:s,end:e,segments:[{start:s,end:e}],pinned:false,isBox:false,parentId:boxId,priority:100,
-backlog:0,
-status:'pending',originalDurationMs:e-s});saveTasks(activeProfileId,tasks);modal.style.display='none'};document.getElementById('subtaskCancel').onclick=()=>modal.style.display='none'}
+  function openSubtaskModalForBox(boxId,defaultStart,defaultEnd){const modal=document.getElementById('subtaskModal');modal.style.display='flex';document.getElementById('subtaskTitle').value='';document.getElementById('subtaskStart').value=toInputLocal(defaultStart||Date.now());document.getElementById('subtaskEnd').value=toInputLocal(defaultEnd||((defaultStart||Date.now())+30*60000));document.getElementById('subtaskSave').onclick=()=>{const title=document.getElementById('subtaskTitle').value.trim(),s=parseDT(document.getElementById('subtaskStart').value),e=parseDT(document.getElementById('subtaskEnd').value);if(!title){alert('Title required');return}if(!s||!e||e<=s){alert('Invalid times');return}const tasks=normalizeTasks(loadTasks(activeProfileId));tasks.push({id:uid(),title,start:s,end:e,segments:[{start:s,end:e}],pinned:false,isBox:false,parentId:boxId,priority:100,status:'pending',originalDurationMs:e-s});saveTasks(activeProfileId,tasks);modal.style.display='none'};document.getElementById('subtaskCancel').onclick=()=>modal.style.display='none'}
   function togglePin(id){const tasks=normalizeTasks(loadTasks(activeProfileId)),t=tasks.find(x=>x.id===id);if(!t)return;t.pinned=!t.pinned;saveTasks(activeProfileId,tasks)}
   function updateTaskPriority(id,value){const tasks=normalizeTasks(loadTasks(activeProfileId)),t=tasks.find(x=>x.id===id);if(!t)return;t.priority=clamp(Number(value)||100,10,500);saveTasks(activeProfileId,tasks,{toast:false})}
   function setTaskStatus(id,status){const tasks=normalizeTasks(loadTasks(activeProfileId)),t=tasks.find(x=>x.id===id);if(!t)return;t.status=['pending','done','skipped'].includes(status)?status:'pending';if(t.isBox)tasks.filter(x=>x.parentId===t.id).forEach(ch=>ch.status=t.status);saveTasks(activeProfileId,tasks,{toast:false})}
@@ -708,64 +707,11 @@ status:'pending',originalDurationMs:e-s});saveTasks(activeProfileId,tasks);modal
   // Smart delay
   // ----------------------------
   function allocateWeighted(bases,weights,capacity){
-
-  const total=bases.reduce((a,b)=>a+b,0);
-
-  if(capacity>=total)
-    return bases.slice();
-
-  if(capacity<=0)
-    return bases.map(()=>0);
-
-
-  const weightSum=weights.reduce((a,b)=>a+b,0);
-
-  let raw=weights.map(w=>{
-    return capacity*(w/weightSum);
-  });
-
-
-  // هیچ کاری بیشتر از زمان اصلی خودش نگیرد
-  raw=raw.map((v,i)=>{
-    return Math.min(v,bases[i]);
-  });
-
-
-  let remain=capacity-raw.reduce((a,b)=>a+b,0);
-
-
-  // اگر به خاطر محدودیت بعضی درس‌ها زمان اضافه ماند،
-  // بین درس‌های باقی‌مانده پخش کن
-
-  while(remain>1){
-
-    let available=[];
-
-    raw.forEach((v,i)=>{
-      if(bases[i]-v>1)
-        available.push(i);
-    });
-
-
-    if(!available.length)
-      break;
-
-
-    const add=remain/available.length;
-
-
-    available.forEach(i=>{
-      const room=bases[i]-raw[i];
-      raw[i]+=Math.min(room,add);
-    });
-
-
-    remain=capacity-raw.reduce((a,b)=>a+b,0);
+    const total=bases.reduce((a,b)=>a+b,0);if(capacity>=total)return bases.slice();if(capacity<=0)return bases.map(()=>0);
+    let lo=0,hi=1;const sumAt=l=>bases.reduce((a,b,i)=>a+Math.min(b,l*b*Math.max(.1,weights[i])),0);while(sumAt(hi)<capacity)hi*=2;
+    for(let k=0;k<80;k++){const mid=(lo+hi)/2;if(sumAt(mid)<capacity)lo=mid;else hi=mid}
+    const lam=(lo+hi)/2;const out=bases.map((b,i)=>Math.min(b,lam*b*Math.max(.1,weights[i])));const diff=capacity-out.reduce((a,b)=>a+b,0);if(Math.abs(diff)>1&&out.length){for(let i=out.length-1;i>=0;i--){const room=bases[i]-out[i];if(room>0){const add=Math.min(room,diff);out[i]+=add;break}}}return out;
   }
-
-
-  return raw;
-}
   function buildSmartDelayPlan(minutes){
     const delayMin=parseFloat(minutes||'0');if(!isFinite(delayMin)||delayMin<=0)throw new Error('Enter delay minutes > 0');
     const delayMs=delayMin*60000,nowMs=now(),tasks=normalizeTasks(loadTasks(activeProfileId));
@@ -779,30 +725,7 @@ status:'pending',originalDurationMs:e-s});saveTasks(activeProfileId,tasks);modal
     const locks=tasks.filter(t=>!t.parentId&&t.pinned&&t.status!=='skipped').flatMap(t=>getSegments(t)).filter(s=>s.end>nowMs&&s.start<dayEndMs);
     const freeIntervals=buildFreeIntervals(nowMs,dayEndMs,locks),freeFuture=totalIntervalDuration(freeIntervals);
     const completedActive=Math.min(taskDuration(active),taskPlannedElapsedUntil(active,virtualNow));
-    const bases=candidates.map(taskDuration);
-
-// Weight واقعی: مدت × اهمیت
-const weights=candidates.map(t=>{
-
-  const duration=Math.max(
-    1,
-    taskDuration(t)/60000
-  );
-
-  const priority=
-    (Number(t.priority)||100)/100;
-
-
-  const backlogFactor =
-    1 + ((Number(t.backlog)||0)/120);
-
-
-  return duration *
-         priority *
-         backlogFactor;
-});
-
-const sumBase=bases.reduce((a,b)=>a+b,0);
+    const bases=candidates.map(taskDuration),weights=candidates.map(t=>(Number(t.priority)||100)/100),sumBase=bases.reduce((a,b)=>a+b,0);
     const capacityTotal=Math.min(sumBase,freeFuture+completedActive);const targetTotals=allocateWeighted(bases,weights,capacityTotal);
     const remaining=targetTotals.map((x,i)=>Math.max(0,x-(i===0?completedActive:0)));
     const state={idx:0,cursor:freeIntervals[0]?.start||nowMs};const newSegmentsById={};let overflow=0;
@@ -855,7 +778,29 @@ const sumBase=bases.reduce((a,b)=>a+b,0);
   async function importProgramsFromCsv(){
     const file=els.programCsvFile.files&&els.programCsvFile.files[0];if(!file){alert('Choose a CSV file first');return}let text;try{text=await file.text()}catch(e){alert('Could not read CSV file');return}text=text.replace(/^\uFEFF/,'');const rows=parseCsv(text);if(rows.length<2){alert('CSV has no data rows');return}const headers=rows[0].map(x=>x.trim().toLowerCase()),required=['program','id','parent_id','type','title','start','end','pinned'],missing=required.filter(h=>!headers.includes(h));if(missing.length){alert('Missing CSV column(s): '+missing.join(', '));return}const idx=Object.fromEntries(required.map(h=>[h,headers.indexOf(h)]));idx.priority=headers.indexOf('priority');const grouped=new Map();for(let r=1;r<rows.length;r++){const row=rows[r];if(row.every(x=>!String(x||'').trim()))continue;const program=String(row[idx.program]||'').trim(),id=String(row[idx.id]||'').trim(),parentId=String(row[idx.parent_id]||'').trim(),type=String(row[idx.type]||'').trim().toLowerCase(),title=String(row[idx.title]||'').trim(),start=parseTimeOffset(String(row[idx.start]||''));let end=parseTimeOffset(String(row[idx.end]||''));const pinned=/^(1|true|yes|y)$/i.test(String(row[idx.pinned]||'').trim()),priority=idx.priority>=0?clamp(Number(row[idx.priority])||100,10,500):100;if(!program||!id||!title||start===null||end===null||!['task','box','subtask'].includes(type)){alert(`Invalid CSV data on row ${r+1}`);return}if(end<=start)end+=1440;if(type==='subtask'&&!parentId){alert(`Row ${r+1}: subtask needs parent_id`);return}if(type!=='subtask'&&parentId){alert(`Row ${r+1}: only subtask rows may have parent_id`);return}if(!grouped.has(program))grouped.set(program,[]);grouped.get(program).push({templateId:id,parentTemplateId:type==='subtask'?parentId:null,title,startOffsetMin:start,endOffsetMin:end,isBox:type==='box',pinned,priority})}if(!grouped.size){alert('No program rows found');return}for(const[name,parts]of grouped){const ids=new Set();for(const part of parts){if(ids.has(part.templateId)){alert(`Program “${name}” has duplicate id: ${part.templateId}`);return}ids.add(part.templateId)}for(const part of parts){if(part.parentTemplateId&&!ids.has(part.parentTemplateId)){alert(`Program “${name}”: missing parent_id ${part.parentTemplateId}`);return}}}const programs=loadPrograms(activeProfileId),existing=new Set(programs.map(p=>p.name.toLowerCase()));let firstId=null;for(const[raw,parts]of grouped){const name=uniqueProgramName(raw,existing);existing.add(name.toLowerCase());const p={id:uid(),name,createdAt:Date.now(),parts:parts.sort((a,b)=>a.startOffsetMin-b.startOffsetMin)};programs.push(p);if(!firstId)firstId=p.id}savePrograms(activeProfileId,programs,true);els.programSelect.value=firstId||'';updateProgramSummary();els.programCsvFile.value='';showToast(`Imported ${grouped.size} program(s)`)
   }
+
+  const renameProgramBtn=document.getElementById('renameProgram');
+  if(renameProgramBtn){
+    renameProgramBtn.onclick=()=>{
+      const ps=loadPrograms(activeProfileId);
+      const p=ps.find(x=>x.id===els.programSelect.value);
+      if(!p)return alert('Choose a program');
+      const n=prompt('New program name',p.name);
+      if(n){p.name=n.trim();savePrograms(activeProfileId,ps);}
+    };
+  }
   els.saveProgramFromDay.onclick=saveCurrentDayAsProgram;els.applyProgram.onclick=applySelectedProgram;els.deleteProgram.onclick=deleteSelectedProgram;els.exportProgram.onclick=exportSelectedProgram;els.importProgramCsv.onclick=importProgramsFromCsv;
+
+
+  // Added UI improvements
+  (function(){
+    const menuBtn=document.getElementById('moreMenuBtn');
+    const menu=document.getElementById('moreMenu');
+    if(menuBtn){
+      menuBtn.onclick=()=>menu.style.display=menu.style.display==='none'?'block':'none';
+      document.addEventListener('click',e=>{if(!menu.contains(e.target)&&e.target!==menuBtn)menu.style.display='none'});
+    }
+  })();
 
   // ----------------------------
   // Wiring/start
