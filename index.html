@@ -5244,7 +5244,375 @@ function setLock(id,state=true){
 
 }
 
+/* =====================================================
+ AUTO SCHEDULER ENGINE v2
+===================================================== */
 
+
+const autoScheduler = {
+
+
+generate(config){
+
+
+const {
+date,
+startTime,
+endTime,
+specialties,
+generals,
+pattern,
+rest,
+language,
+languageDuration,
+languageAttach
+}=config;
+
+
+
+let start = this.timeToMinutes(startTime);
+let end   = this.timeToMinutes(endTime);
+
+
+/*
+ عبور از نیمه شب
+مثال:
+09:00 تا 01:00
+*/
+
+if(end<=start){
+    end+=1440;
+}
+
+
+
+let totalMinutes=end-start;
+
+
+
+let subjects=[];
+
+
+/*
+ ساخت دور اول و دوم
+*/
+
+let maxRepeat=0;
+
+
+specialties.forEach(x=>{
+    maxRepeat=Math.max(maxRepeat,x.repeat||1);
+});
+
+
+let rounds=[];
+
+
+
+for(let r=0;r<maxRepeat;r++){
+
+
+let specIndex=0;
+let genIndex=0;
+
+
+while(
+specIndex<specialties.length ||
+genIndex<generals.length
+){
+
+
+if(pattern==="SG"){
+
+
+if(specIndex<specialties.length){
+
+rounds.push({
+...specialties[specIndex],
+type:"specialty"
+});
+
+specIndex++;
+
+}
+
+
+if(genIndex<generals.length){
+
+rounds.push({
+...generals[genIndex],
+type:"general"
+});
+
+genIndex++;
+
+}
+
+
+}
+
+
+
+else{
+
+
+if(genIndex<generals.length){
+
+rounds.push({
+...generals[genIndex],
+type:"general"
+});
+
+genIndex++;
+
+}
+
+
+
+if(specIndex<specialties.length){
+
+rounds.push({
+...specialties[specIndex],
+type:"specialty"
+});
+
+specIndex++;
+
+}
+
+
+}
+
+
+}
+
+}
+
+
+
+/*
+ اضافه کردن زبان چسبیده
+*/
+
+if(language){
+
+
+let index =
+rounds.findIndex(
+x=>x.title===languageAttach
+);
+
+
+if(index!==-1){
+
+
+rounds.splice(
+index+1,
+0,
+{
+title:language,
+weight:languageDuration,
+fixed:true,
+duration:languageDuration,
+type:"language"
+}
+);
+
+
+}
+
+}
+
+
+
+/*
+ حذف زمان استراحت
+*/
+
+
+let totalRest =
+(rest || 0)
+*
+Math.max(0,rounds.length-1);
+
+
+
+let studyTime =
+totalMinutes-totalRest;
+
+
+
+if(studyTime<0){
+
+alert("Time range too small");
+return [];
+
+}
+
+
+
+/*
+ محاسبه مجموع وزن
+*/
+
+
+let weightSum=
+rounds.reduce(
+(a,b)=>
+a+(Number(b.weight)||1),
+0
+);
+
+
+
+let result=[];
+
+let cursor=start;
+
+
+
+rounds.forEach(
+(item,index)=>{
+
+
+let duration;
+
+
+
+if(item.fixed){
+
+duration=item.duration;
+
+}
+
+else{
+
+
+duration=
+Math.floor(
+studyTime *
+(
+(Number(item.weight)||1)
+/
+weightSum
+)
+);
+
+
+}
+
+
+
+result.push({
+
+title:item.title,
+
+weight:item.weight||1,
+
+start:this.minutesToDate(
+date,
+cursor
+),
+
+end:this.minutesToDate(
+date,
+cursor+duration
+),
+
+type:item.type
+
+});
+
+
+
+cursor+=duration;
+
+
+
+if(index!==rounds.length-1){
+
+cursor+=rest;
+
+}
+
+
+});
+
+
+
+return result;
+
+
+},
+
+
+
+
+/*
+ تبدیل ساعت
+*/
+
+
+timeToMinutes(time){
+
+
+let [h,m]=
+time.split(":")
+.map(Number);
+
+
+return h*60+m;
+
+
+},
+
+
+
+
+minutesToDate(date,min){
+
+
+let d=new Date(date);
+
+
+if(min>=1440){
+
+d.setDate(
+d.getDate()+1
+);
+
+min-=1440;
+
+}
+
+
+d.setHours(
+Math.floor(min/60)
+);
+
+d.setMinutes(
+min%60
+);
+
+d.setSeconds(0);
+d.setMilliseconds(0);
+
+
+return d.getTime();
+
+
+}
+
+
+};
+
+
+
+
+
+/* تست دستی در کنسول */
+
+window.autoScheduler=autoScheduler;
 
 </script>
 
