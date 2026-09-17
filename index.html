@@ -5,35 +5,24 @@
 
 <meta charset="utf-8">
 
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport"
+content="width=device-width,initial-scale=1,viewport-fit=cover">
+
 
 <title>
-Timeline Scheduler v3
+Timeline Scheduler Smart Study
 </title>
-
-
-<meta name="theme-color" content="#2563eb">
 
 
 <style>
 
-
-/* =================================================
-   ROOT
-================================================= */
-
-
 :root{
-
 
 --scale:1;
 
-
---bg:#f5f7fb;
+--bg:#f7f8fb;
 
 --surface:#ffffff;
-
---surface2:#f1f5f9;
 
 --text:#111827;
 
@@ -41,108 +30,32 @@ Timeline Scheduler v3
 
 --border:#e5e7eb;
 
-
 --primary:#2563eb;
 
 --danger:#ef4444;
 
+--warning:#f59e0b;
+
 --success:#10b981;
-
-
---radius:14px;
-
-
-
---time-size:14px;
-
---date-size:12px;
-
-
-
-font-family:
-
-system-ui,
--apple-system,
-BlinkMacSystemFont,
-"Segoe UI",
-Tahoma,
-sans-serif;
-
 
 }
 
 
 
-
-/* =================================================
- DARK MODE
-================================================= */
-
-
-body.dark{
-
+html.dark{
 
 --bg:#0f172a;
 
 --surface:#1e293b;
 
---surface2:#334155;
-
 --text:#f8fafc;
 
 --muted:#94a3b8;
 
---border:#475569;
-
-
-}
-
-
-
-
-
-/* =================================================
- THEMES
-================================================= */
-
-
-body.theme-blue{
-
---primary:#2563eb;
+--border:#334155;
 
 }
 
-
-body.theme-green{
-
---primary:#059669;
-
-}
-
-
-body.theme-purple{
-
---primary:#7c3aed;
-
-}
-
-
-body.theme-orange{
-
---primary:#ea580c;
-
-}
-
-
-
-
-
-
-
-
-/* =================================================
- RESET
-================================================= */
 
 
 *{
@@ -153,218 +66,34 @@ box-sizing:border-box;
 
 
 
-html,body{
+body{
 
 
 margin:0;
 
-padding:0;
-
-width:100%;
-
-min-height:100%;
-
-
-overflow-x:hidden;
-
-
-}
-
-
-
-
-
-
-
-/* =================================================
- BODY
-================================================= */
-
-
-body{
-
+padding:20px;
 
 background:var(--bg);
 
 color:var(--text);
 
+font-family:
+
+system-ui,
+Tahoma,
+sans-serif;
+
 
 zoom:var(--scale);
 
 
-font-size:16px;
-
-
-padding:
-
-max(12px,env(safe-area-inset-top))
-
-max(12px,env(safe-area-inset-right))
-
-calc(80px + env(safe-area-inset-bottom))
-
-max(12px,env(safe-area-inset-left));
-
-
-
-transition:
-
-background .25s,
-color .25s;
-
-
 }
 
 
 
+.container{
 
-
-
-
-
-
-/* =================================================
- COMMON ELEMENTS
-================================================= */
-
-
-button,
-input,
-select,
-textarea{
-
-
-font:inherit;
-
-
-border-radius:10px;
-
-
-border:
-
-1px solid var(--border);
-
-
-background:var(--surface);
-
-
-color:var(--text);
-
-
-padding:10px;
-
-
-}
-
-
-
-button{
-
-
-background:var(--primary);
-
-
-color:white;
-
-
-border:none;
-
-
-cursor:pointer;
-
-
-min-height:42px;
-
-
-}
-
-
-
-button:hover{
-
-opacity:.9;
-
-}
-
-
-
-button.ghost{
-
-
-background:transparent;
-
-
-color:var(--text);
-
-
-border:1px solid var(--border);
-
-
-}
-
-
-
-button.secondary{
-
-
-background:#64748b;
-
-
-}
-
-
-
-button.danger{
-
-
-background:var(--danger);
-
-
-}
-
-
-
-button.icon{
-
-
-width:38px;
-
-height:38px;
-
-padding:0;
-
-
-display:flex;
-
-align-items:center;
-
-justify-content:center;
-
-
-font-size:19px;
-
-
-}
-
-
-
-
-
-
-
-
-
-
-/* =================================================
- MAIN CONTAINER
-================================================= */
-
-
-.app{
-
-
-max-width:720px;
-
+max-width:900px;
 
 margin:auto;
 
@@ -373,204 +102,97 @@ margin:auto;
 
 
 
+.card{
 
 
+background:var(--surface);
 
+border:1px solid var(--border);
 
-
-
-
-/* =================================================
- HEADER
-================================================= */
-
-
-.app-header{
-
-
-display:flex;
-
-
-justify-content:space-between;
-
-
-align-items:center;
-
-
-gap:12px;
-
+border-radius:14px;
 
 padding:14px;
 
+margin-bottom:12px;
+
+
+}
+
+
+
+
+button,
+input,
+select{
+
+
+font:inherit;
+
+padding:9px;
+
+border-radius:8px;
+
+border:1px solid var(--border);
 
 background:var(--surface);
 
-
-border:
-
-1px solid var(--border);
-
-
-border-radius:var(--radius);
+color:var(--text);
 
 
 }
 
 
 
+button{
 
+background:var(--primary);
 
-.app-title{
+color:white;
 
+border:none;
 
-font-size:20px;
-
-font-weight:800;
-
-
-}
-
-
-
-.app-subtitle{
-
-
-font-size:13px;
-
-color:var(--muted);
-
+cursor:pointer;
 
 }
 
 
 
+button.ghost{
+
+background:transparent;
+
+color:var(--text);
+
+border:1px solid var(--border);
+
+}
 
 
 
-.menu-btn{
+button.danger{
+
+background:var(--danger);
+
+}
 
 
-width:46px;
+button.warning{
 
-height:46px;
+background:var(--warning);
+
+}
 
 
-border-radius:50%;
 
-
-font-size:25px;
-
+.row{
 
 display:flex;
 
-align-items:center;
-
-justify-content:center;
-
-
-}
-
-
-
-
-
-
-
-
-
-/* =================================================
- THREE DOT MENU
-================================================= */
-
-
-.dropdown-menu{
-
-
-position:fixed;
-
-
-right:14px;
-
-
-top:75px;
-
-
-width:260px;
-
-
-background:var(--surface);
-
-
-border:
-
-1px solid var(--border);
-
-
-border-radius:16px;
-
-
-box-shadow:
-
-0 15px 40px rgba(0,0,0,.2);
-
-
-
-display:none;
-
-
-z-index:5000;
-
-
-overflow:hidden;
-
-
-}
-
-
-
-
-.dropdown-menu.show{
-
-
-display:block;
-
-
-}
-
-
-
-
-.menu-item{
-
-
-padding:15px;
-
-
-display:flex;
-
-
-gap:12px;
-
+gap:8px;
 
 align-items:center;
 
-
-border-bottom:
-
-1px solid var(--border);
-
-
-font-size:15px;
-
-
-}
-
-
-
-.menu-item:last-child{
-
-
-border-bottom:none;
+flex-wrap:wrap;
 
 
 }
@@ -578,426 +200,192 @@ border-bottom:none;
 
 
 
-.menu-item:active{
-
-
-background:var(--surface2);
-
-
-}
-
-
-
-
-
-
-
-
-
-/* =================================================
- CARDS
-================================================= */
-
-
-.section-card{
+.task{
 
 
 background:var(--surface);
 
+border:1px solid var(--border);
 
-border:
+border-radius:12px;
 
-1px solid var(--border);
-
-
-border-radius:var(--radius);
-
-
-padding:14px;
-
-
-margin-top:12px;
-
-
-}
-
-
-
-
-
-
-/* =================================================
- TASK CARD
-================================================= */
-
-
-.task-card{
-
-
-background:var(--surface);
-
-
-border:
-
-1px solid var(--border);
-
-
-border-left:
-
-6px solid var(--primary);
-
-
-border-radius:var(--radius);
-
-
-padding:12px;
-
+padding:10px;
 
 margin-top:10px;
 
 
 }
-
-
-
-
-
-.task-header{
-
-
-display:flex;
-
-
-justify-content:space-between;
-
-
-align-items:center;
-
-
-gap:8px;
-
-
-}
-
-
 
 
 
 .task-title{
 
-
 font-weight:800;
 
-
 }
 
 
 
-.task-time{
+.small{
 
-
-font-size:var(--time-size);
-
+font-size:13px;
 
 color:var(--muted);
 
-
 }
 
 
 
-.task-date{
-
-
-font-size:var(--date-size);
-
-
-color:var(--muted);
-
-
-}
-
-
-
-
-
-
-.task-badges{
+.task-toolbar{
 
 
 display:flex;
 
+align-items:center;
 
-flex-wrap:wrap;
-
-
-gap:6px;
-
-
-margin-top:10px;
-
-
-}
-
-
-
-
-
-.badge{
-
-
-background:var(--surface2);
-
-
-padding:5px 8px;
-
-
-border-radius:8px;
-
-
-font-size:12px;
-
-
-}
-
-
-
-
-
-.task-actions{
-
-
-display:flex;
-
-
-gap:6px;
-
-
-margin-top:10px;
-
-
-}
-
-
-
-
-
-
-
-
-
-/* =================================================
- BOX
-================================================= */
-
-
-.box-card{
-
-
-border-left:
-
-7px solid var(--primary);
-
-
-background:var(--surface);
-
-
-border-radius:var(--radius);
-
-
-padding:12px;
-
-
-margin-top:12px;
-
-
-}
-
-
-
-.subtask{
-
-
-background:var(--surface2);
-
-
-padding:10px;
-
-
-border-radius:10px;
-
+gap:5px;
 
 margin-top:8px;
 
+overflow-x:auto;
+
 
 }
 
 
 
+.task-toolbar input,
+.task-toolbar select,
+.task-toolbar button{
+
+
+height:32px;
+
+min-height:32px;
+
+font-size:13px;
+
+
+}
 
 
 
+.weight-input{
+
+width:55px;
+
+text-align:center;
+
+}
 
 
 
-/* =================================================
- POPUPS
-================================================= */
+.status-select{
+
+width:90px;
+
+}
 
 
-.popup-overlay{
+
+.icon{
+
+width:34px;
+
+padding:0;
+
+}
+
+
+
+.modal{
+
+position:fixed;
+
+inset:0;
+
+background:rgba(0,0,0,.45);
+
+display:none;
+
+align-items:center;
+
+justify-content:center;
+
+z-index:999;
+
+
+}
+
+
+
+.modal-box{
+
+background:var(--surface);
+
+padding:20px;
+
+border-radius:15px;
+
+width:min(400px,90%);
+
+
+}
+
+
+
+.toast{
 
 
 position:fixed;
 
+bottom:20px;
 
-inset:0;
+left:50%;
 
+transform:translateX(-50%);
 
-background:rgba(0,0,0,.45);
+background:#111;
 
+color:white;
+
+padding:12px 20px;
+
+border-radius:12px;
 
 display:none;
 
 
-align-items:flex-end;
-
-
-z-index:6000;
-
-
 }
 
 
+.toast.show{
 
-
-
-.popup-overlay.show{
-
-
-display:flex;
-
+display:block;
 
 }
-
-
-
-
-.popup{
-
-
-width:100%;
-
-
-max-height:90vh;
-
-
-overflow:auto;
-
-
-background:var(--surface);
-
-
-border-radius:22px 22px 0 0;
-
-
-padding:20px;
-
-
-}
-
-
-
-
-.popup-title{
-
-
-font-size:18px;
-
-
-font-weight:800;
-
-
-margin-bottom:15px;
-
-
-}
-
-
-
-
-
-
-
-/* =================================================
- SETTINGS ROW
-================================================= */
-
-
-.setting-row{
-
-
-display:flex;
-
-
-justify-content:space-between;
-
-
-align-items:center;
-
-
-gap:10px;
-
-
-padding:12px 0;
-
-
-border-bottom:1px solid var(--border);
-
-
-}
-
-
-
 
 
 
 @media(max-width:600px){
 
 
-.app-title{
+body{
 
-
-font-size:18px;
-
+padding:10px;
 
 }
 
 
-.task-header{
+.task-toolbar{
 
-
-flex-direction:column;
-
-
-align-items:flex-start;
-
+flex-wrap:nowrap;
 
 }
 
 
 
-.task-actions button{
-
-
-flex:1;
-
-
 }
-
-
-}
-
 
 
 </style>
@@ -1005,159 +393,95 @@ flex:1;
 </head>
 
 
-<body class="theme-blue">
+<body>
 
 
-<div class="app">
-<!-- =================================================
-APP HEADER
-================================================= -->
+<div class="container">
 
 
-<header class="app-header">
+<header class="card">
 
 
 <div>
 
-<div class="app-title">
+<h2>
 Timeline Scheduler
+</h2>
+
+
+<div class="small">
+Smart Study Planner
 </div>
 
 
-<div class="app-subtitle">
-Smart Study Planner v3
 </div>
 
 
-</div>
-
+<div class="row">
 
 
 <button
-id="mainMenuBtn"
-class="menu-btn">
+id="settingsBtn"
+class="ghost">
 
-⋮
+⚙
 
 </button>
+
+
+</div>
 
 
 </header>
 
 
 
-
-
-<!-- =================================================
-THREE DOT MENU
-================================================= -->
-
-
-<div
-id="mainMenu"
-class="dropdown-menu">
-
-
-
-<div class="menu-item"
-data-open="profilePopup">
-
-👤
-
-<span>
-Profile
-</span>
-
-</div>
-
-
-
-<div class="menu-item"
-data-open="todoPopup">
-
-📝
-
-<span>
-TO-DO
-</span>
-
-</div>
-
-
-
-<div class="menu-item"
-data-open="programPopup">
-
-📚
-
-<span>
-Ready Programs
-</span>
-
-</div>
-
-
-
-<div class="menu-item"
-data-open="rebalancePopup">
-
-⚖️
-
-<span>
-Smart Rebalance
-</span>
-
-</div>
-
-
-
-<div class="menu-item"
-data-open="schedulerPopup">
-
-🧠
-
-<span>
-Automatic Scheduler
-</span>
-
-</div>
-
-
-
-<div class="menu-item"
-data-open="settingsPopup">
-
-⚙️
-
-<span>
-Settings
-</span>
-
-</div>
-
-
-</div>
-
-
-
-
-
-
-
-
-<!-- =================================================
-TIMELINE
-================================================= -->
-
-
-<section
-id="timeline"
-class="section-card">
+<section class="card">
 
 
 <h3>
-Today's Plan
+Add Task
 </h3>
+
+
+<div class="row">
+
+
+<input
+id="title"
+placeholder="نام درس">
+
+
+<input
+id="start"
+type="datetime-local">
+
+
+<input
+id="end"
+type="datetime-local">
+
+
+<input
+id="weight"
+class="weight-input"
+type="number"
+min="1"
+max="10"
+value="5"
+placeholder="Weight">
+
+
+
+<button
+id="addBtn">
+
+Add
+
+</button>
+
+
+</div>
 
 
 </section>
@@ -1166,151 +490,80 @@ Today's Plan
 
 
 
+<section class="card">
 
 
+<h3>
+Smart Rebalance
+</h3>
 
 
-<!-- =================================================
-PROFILE POPUP
-================================================= -->
+<div class="row">
 
 
-<div
-id="profilePopup"
-class="popup-overlay">
+<button
+id="rebalanceBtn">
 
+⚖ Rebalance
 
-<div class="popup">
-
-
-<div class="popup-title">
-Profile
-</div>
-
-
-
-<select id="profileSelect">
-
-<option>
-Profile A
-</option>
-
-
-</select>
-
-
-
-<div style="margin-top:12px">
-
-<button>
-New Profile
 </button>
 
 
-<button class="danger">
-Delete
-</button>
+
+</div>
+
+
+</section>
+
+
+
+
+<section
+id="timeline">
+
+
+</section>
+
 
 
 </div>
 
 
 
-</div>
-
-
-</div>
-
-
-
-
-
-
-
-
-
-<!-- =================================================
-TODO POPUP
-================================================= -->
 
 
 <div
-id="todoPopup"
-class="popup-overlay">
+id="toast"
+class="toast">
 
-
-<div class="popup">
-
-
-<div class="popup-title">
-TO-DO
 </div>
 
 
+<div
+id="settingsModal"
+class="modal">
+
+
+<div class="modal-box">
+
+
+<h3>
+Settings
+</h3>
+
+
+<label>
+
+Zoom
 
 <input
-id="todoInput"
-placeholder="New task...">
+id="zoom"
+type="range"
+min="10"
+max="130"
+value="90">
 
-
-
-<button id="todoAddBtn">
-Add
-</button>
-
-
-
-<div
-id="todoList"
-style="margin-top:15px">
-
-</div>
-
-
-
-</div>
-
-
-</div>
-
-
-
-
-
-
-
-
-
-<!-- =================================================
-READY PROGRAM POPUP
-================================================= -->
-
-
-<div
-id="programPopup"
-class="popup-overlay">
-
-
-<div class="popup">
-
-
-<div class="popup-title">
-Ready Programs
-</div>
-
-
-
-
-<select
-id="readyProgramSelect">
-
-
-<option>
-No program
-</option>
-
-
-</select>
+</label>
 
 
 
@@ -1318,384 +571,10 @@ No program
 
 
 
-<button id="applyProgramBtn">
-
-Apply Program
-
-</button>
-
-
-
-
-<button class="secondary">
-
-Import CSV
-
-</button>
-
-
-
-
-
-<hr>
-
-
-
-
-<input
-id="programNameInput"
-placeholder="Program name">
-
-
-
-<button>
-
-Save current day
-
-</button>
-
-
-
-</div>
-
-
-</div>
-
-
-
-
-
-
-
-
-
-<!-- =================================================
-SMART REBALANCE POPUP
-================================================= -->
-
-
-<div
-id="rebalancePopup"
-class="popup-overlay">
-
-
-<div class="popup">
-
-
-<div class="popup-title">
-
-Smart Rebalance
-
-</div>
-
-
-
-
-<div class="setting-row">
-
-
-<span>
-Delay
-</span>
-
-
-<input
-id="rebalanceDelay"
-type="number"
-value="30">
-
-
-</div>
-
-
-
-
-
-
-<div class="setting-row">
-
-
-<span>
-Rest between blocks
-</span>
-
-
-<input
-id="rebalanceRest"
-type="number"
-value="10">
-
-
-</div>
-
-
-
-
-
-
-<div class="setting-row">
-
-
-<span>
-Mode
-</span>
-
-
-<select id="rebalanceMode">
-
-
-<option value="future">
-
-Future blocks
-
-</option>
-
-
-<option value="all">
-
-Whole day
-
-</option>
-
-
-</select>
-
-
-</div>
-
-
-
-
-
-<button id="rebalanceBtn">
-
-Recalculate Timeline
-
-</button>
-
-
-
-</div>
-
-
-</div>
-
-
-
-
-
-
-
-
-<!-- =========================
- AUTO SCHEDULER POPUP v2
-========================= -->
-
-
-<div 
-id="schedulerPopup"
-class="popup-overlay">
-
-
-<div class="popup">
-
-
-<div class="popup-title">
-🧠 Automatic Scheduler
-</div>
-
-
-
-<div class="setting-row">
-
-<span>
-Pattern
-</span>
-
-
-<select id="autoPattern">
-
-<option value="SG">
-تخصصی → عمومی
-</option>
-
-
-<option value="GS">
-عمومی → تخصصی
-</option>
-
-
-</select>
-
-
-</div>
-
-
-
-
-
-<div class="setting-row">
-
-<span>
-Start Time
-</span>
-
-
-<input 
-id="autoStart"
-type="time"
-value="09:00">
-
-
-</div>
-
-
-
-
-
-<div class="setting-row">
-
-<span>
-End Time
-</span>
-
-
-<input 
-id="autoEnd"
-type="time"
-value="01:00">
-
-
-</div>
-
-
-
-
-
-<div class="setting-row">
-
-<span>
-Rest between lessons
-</span>
-
-
-<input 
-id="autoRest"
-type="number"
-value="10"
-min="0">
-
-
-</div>
-
-
-
-
-
-<hr>
-
-
-
-
-
-<div class="popup-title"
-style="font-size:16px">
-
-Specialty Subjects
-
-</div>
-
-
-
-<button 
-class="secondary"
-onclick="autoSubjects.addSpecialty()">
-
-+ Add Specialty
-
-</button>
-
-
-
-<div 
-id="autoSpecialtyList">
-
-</div>
-
-
-
-
-
-
-<hr>
-
-
-
-
-
-
-<div class="popup-title"
-style="font-size:16px">
-
-General Subjects
-
-</div>
-
-
-
-<button 
-class="secondary"
-onclick="autoSubjects.addGeneral()">
-
-+ Add General
-
-</button>
-
-
-
-<div 
-id="autoGeneralList">
-
-</div>
-
-
-
-
-
-
-<hr>
-
-
-
-
-
-
-<div 
-id="autoSubjectList">
-
-
-</div>
-
-
-
-
-
-
 <button
-id="generateSchedule">
+id="closeSettings">
 
-Generate Preview
-
-</button>
-
-
-
-
-
-<button 
-class="secondary">
-
-Close
+Done
 
 </button>
 
@@ -1703,2554 +582,53 @@ Close
 
 </div>
 
-
 </div>
-
-
-
-
-
-
-
-
-<!-- =================================================
-SETTINGS POPUP
-================================================= -->
-
-
-<div
-id="settingsPopup"
-class="popup-overlay">
-
-
-<div class="popup">
-
-
-<div class="popup-title">
-
-Settings
-
-</div>
-
-
-
-
-
-<div class="setting-row">
-
-<span>
-Dark Mode
-</span>
-
-
-<input
-type="checkbox"
-id="darkModeToggle">
-
-
-</div>
-
-
-
-
-
-
-<div class="setting-row">
-
-<span>
-Zoom
-
-</span>
-
-
-<input
-id="zoomRange"
-type="range"
-min="10"
-max="150"
-value="100">
-
-
-</div>
-
-
-
-
-
-
-<div class="setting-row">
-
-<span>
-Theme
-
-</span>
-
-
-
-<select id="themeSelect">
-
-
-<option value="blue">
-Blue
-</option>
-
-
-<option value="green">
-Green
-</option>
-
-
-<option value="purple">
-Purple
-</option>
-
-
-<option value="orange">
-Orange
-</option>
-
-
-
-</select>
-
-
-</div>
-
-
-
-
-
-
-<div class="setting-row">
-
-
-<span>
-Time Font
-
-</span>
-
-
-<input
-id="timeFontRange"
-type="range"
-min="10"
-max="30"
-value="14">
-
-
-</div>
-
-
-
-
-
-
-<div class="setting-row">
-
-
-<span>
-Date Font
-
-</span>
-
-
-<input
-id="dateFontRange"
-type="range"
-min="10"
-max="30"
-value="12">
-
-
-</div>
-
-
-
-
-
-<button class="secondary">
-
-Close
-
-</button>
-
-
-
-</div>
-
-
-</div>
-<!-- =================================================
-EDIT POPUP
-================================================= -->
-
-
-<div
-id="editPopup"
-class="popup-overlay">
-
-
-<div class="popup">
-
-
-<div class="popup-title">
-Edit Task
-</div>
-
-
-
-<label>
-Title
-</label>
-
-
-<input
-id="editTitle">
-
-
-
-
-
-<label>
-Start
-</label>
-
-
-<input
-id="editStart"
-type="datetime-local">
-
-
-
-
-
-<label>
-End
-</label>
-
-
-<input
-id="editEnd"
-type="datetime-local">
-
-
-
-
-
-<label>
-Weight (0-10)
-</label>
-
-
-<input
-id="editWeight"
-type="number"
-min="0"
-max="10"
-value="10">
-
-
-
-
-
-<label>
-Color
-</label>
-
-
-<input
-id="editColor"
-type="color"
-value="#2563eb">
-
-
-
-
-
-<div style="margin-top:15px">
-
-
-<button
-id="saveEdit">
-
-Save
-
-</button>
-
-
-
-<button
-class="secondary"
-id="cancelEdit">
-
-Cancel
-
-</button>
-
-
-</div>
-
-
-
-</div>
-
-
-</div>
-
-
-
-
-
-
-
-
-
-<!-- =================================================
-DELETE CONFIRM POPUP
-================================================= -->
-
-
-<div
-id="deletePopup"
-class="popup-overlay">
-
-
-<div class="popup">
-
-
-<div class="popup-title">
-
-Delete Task
-
-</div>
-
-
-
-<p>
-
-What do you want to do?
-
-</p>
-
-
-
-<button
-id="deleteOnly">
-
-Delete only
-
-</button>
-
-
-
-<button
-id="deleteShift"
-class="danger">
-
-Delete and Shift
-
-</button>
-
-
-
-
-<button
-class="secondary"
-id="deleteCancel">
-
-Cancel
-
-</button>
-
-
-
-</div>
-
-
-</div>
-
-
-
-
-
-
-
-
-
-<!-- =================================================
-COLOR PICKER POPUP
-================================================= -->
-
-
-<div
-id="colorPopup"
-class="popup-overlay">
-
-
-<div class="popup">
-
-
-<div class="popup-title">
-
-Choose Color
-
-</div>
-
-
-
-
-<div
-id="colorPalette"
-style="
-display:grid;
-grid-template-columns:repeat(5,1fr);
-gap:10px;
-">
-
-
-<button
-data-color="#2563eb"
-style="background:#2563eb">
-</button>
-
-
-<button
-data-color="#059669"
-style="background:#059669">
-</button>
-
-
-<button
-data-color="#dc2626"
-style="background:#dc2626">
-</button>
-
-
-<button
-data-color="#9333ea"
-style="background:#9333ea">
-</button>
-
-
-<button
-data-color="#ea580c"
-style="background:#ea580c">
-</button>
-
-
-<button
-data-color="#0891b2"
-style="background:#0891b2">
-</button>
-
-
-<button
-data-color="#be123c"
-style="background:#be123c">
-</button>
-
-
-<button
-data-color="#65a30d"
-style="background:#65a30d">
-</button>
-
-
-<button
-data-color="#475569"
-style="background:#475569">
-</button>
-
-
-<button
-data-color="#000000"
-style="background:#000000">
-</button>
-
-
-
-</div>
-
-
-
-</div>
-
-
-</div>
-
-
-
-
-
-
-
-
-
-<!-- =================================================
-SMART DAILY DATA PANEL
-================================================= -->
-
-
-<div
-id="smartDailyPanel"
-style="display:none">
-
-
-<input
-id="smartDailyEnabled"
-type="checkbox">
-
-
-<input
-id="smartDailyRest"
-type="number"
-value="10">
-
-
-</div>
-
-
-
-
-
-
-
-
-
-<!-- =================================================
-AUTOMATIC GENERATOR ADVANCED OPTIONS
-================================================= -->
-
-
-<div
-id="advancedSchedulerData"
-style="display:none">
-
-
-
-<input
-id="specialCount"
-type="number"
-value="4">
-
-
-
-<input
-id="generalCount"
-type="number"
-value="4">
-
-
-
-
-
-<input
-id="languageDuration"
-type="number"
-value="30">
-
-
-
-
-
-<select
-id="languagePosition">
-
-
-<option value="before">
-
-Before attached subject
-
-</option>
-
-
-<option value="after">
-
-After attached subject
-
-</option>
-
-
-
-</select>
-
-
-
-
-</div>
-
-
-
-
-
-
-
-
-
-<!-- =================================================
-APP DATA CONTAINER
-================================================= -->
-
-
-<div
-id="appData"
-style="display:none">
-
-
-</div>
-
-
-
-
-
-
-
 <script>
 
+(function(){
 
-/* =================================================
-GLOBAL APP STATE
-================================================= */
 
+const STORAGE_KEY =
+"timeline_scheduler_final_v1";
 
-const APP_KEY =
-"timeline_scheduler_v3";
 
 
+let tasks=[];
 
-let appState = {
+let selectedTask=null;
 
 
-profile:"default",
 
 
-tasks:[],
 
-
-programs:[],
-
-
-settings:{
-
-
-dark:false,
-
-
-zoom:100,
-
-
-theme:"blue",
-
-
-timeFont:14,
-
-
-dateFont:12
-
-
-},
-
-
-
-selectedTask:null,
-
-
-selectedColor:null
-
-
-};
-
-
-
-
-
-
-
-/* =================================================
-LOCAL STORAGE
-================================================= */
-
-
-function saveApp(){
-
-
-localStorage.setItem(
-
-APP_KEY,
-
-JSON.stringify(appState)
-
-);
-
-
-}
-
-
-
-
-function loadApp(){
-
-
-let data =
-localStorage.getItem(APP_KEY);
-
-
-
-if(data){
-
-
-try{
-
-
-appState =
-JSON.parse(data);
-
-
-
-}catch(e){
-
-
-console.log(e);
-
-
-}
-
-
-}
-
-
-
-}
-
-
-
-
-
-loadApp();
-
-
-
-
-
-/* =================================================
-HELPERS
-================================================= */
-
+// ===============================
+// BASIC FUNCTIONS
+// ===============================
 
 
 function uid(){
 
-
-return Date.now().toString(36)+
-
-Math.random().toString(36).slice(2);
-
-
-}
-
-
-
-
-
-
-function minutes(ms){
-
-
-return Math.floor(ms/60000);
-
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
-function formatDate(ms){
-
-
-let d=new Date(ms);
-
-
-return d.toLocaleDateString();
-
-
-}
-
-
-
-
-
-
-
-function openPopup(id){
-
-
-document
-.getElementById(id)
-.classList
-.add("show");
-
-
-}
-
-
-
-
-
-
-function closePopup(id){
-
-
-document
-.getElementById(id)
-.classList
-.remove("show");
-
-
-}
-
-
-
-
-
-
-
-</script>
-<script>
-
-/* =================================================
-THREE DOT MENU
-================================================= */
-
-
-const menuBtn =
-document.getElementById("mainMenuBtn");
-
-
-const mainMenu =
-document.getElementById("mainMenu");
-
-
-
-menuBtn.onclick=function(){
-
-
-mainMenu.classList.toggle("show");
-
-
-};
-
-
-
-
-
-document
-.querySelectorAll(".menu-item")
-.forEach(item=>{
-
-
-item.onclick=function(){
-
-
-mainMenu.classList.remove("show");
-
-
-let target=this.dataset.open;
-
-
-if(target){
-
-openPopup(target);
-
-
-}
-
-
-};
-
-
-});
-
-
-
-
-
-
-
-/* =================================================
-CLOSE POPUPS BY BACKGROUND CLICK
-================================================= */
-
-
-document
-.querySelectorAll(".popup-overlay")
-.forEach(p=>{
-
-
-p.addEventListener(
-"click",
-function(e){
-
-
-if(e.target===this){
-
-
-this.classList.remove("show");
-
-
-}
-
-
-});
-
-
-});
-
-
-
-
-
-
-
-
-
-/* =================================================
-SETTINGS
-================================================= */
-
-
-
-const darkToggle =
-document.getElementById("darkModeToggle");
-
-
-
-const zoomRange =
-document.getElementById("zoomRange");
-
-
-
-const themeSelect =
-document.getElementById("themeSelect");
-
-
-
-const timeFontRange =
-document.getElementById("timeFontRange");
-
-
-
-const dateFontRange =
-document.getElementById("dateFontRange");
-
-
-
-
-
-
-
-
-function applySettings(){
-
-
-
-document.body.classList.toggle(
-
-"dark",
-
-appState.settings.dark
-
-);
-
-
-
-
-document.body.className =
-document.body.className
-.replace(
-/theme-\w+/,
-""
-);
-
-
-
-
-document.body.classList.add(
-
-"theme-"+appState.settings.theme
-
-);
-
-
-
-
-
-document.documentElement.style
-.setProperty(
-
-"--app-scale",
-
-appState.settings.zoom/100
-
-);
-
-
-
-
-
-document.documentElement.style
-.setProperty(
-
-"--time-font",
-
-appState.settings.timeFont+"px"
-
-);
-
-
-
-
-document.documentElement.style
-.setProperty(
-
-"--date-font",
-
-appState.settings.dateFont+"px"
-
-);
-
-
-
-
-
-if(darkToggle)
-darkToggle.checked =
-appState.settings.dark;
-
-
-
-if(zoomRange)
-zoomRange.value =
-appState.settings.zoom;
-
-
-
-if(themeSelect)
-themeSelect.value =
-appState.settings.theme;
-
-
-
-if(timeFontRange)
-timeFontRange.value =
-appState.settings.timeFont;
-
-
-
-if(dateFontRange)
-dateFontRange.value =
-appState.settings.dateFont;
-
-
-
-
-}
-
-
-
-
-
-darkToggle.onchange=function(){
-
-
-appState.settings.dark=this.checked;
-
-
-saveApp();
-
-
-applySettings();
-
-
-};
-
-
-
-
-
-
-
-zoomRange.oninput=function(){
-
-
-appState.settings.zoom =
-Number(this.value);
-
-
-saveApp();
-
-
-applySettings();
-
-
-};
-
-
-
-
-
-
-
-themeSelect.onchange=function(){
-
-
-appState.settings.theme =
-this.value;
-
-
-saveApp();
-
-
-applySettings();
-
-
-};
-
-
-
-
-
-
-
-timeFontRange.oninput=function(){
-
-
-appState.settings.timeFont =
-Number(this.value);
-
-
-saveApp();
-
-
-applySettings();
-
-
-};
-
-
-
-
-
-
-
-dateFontRange.oninput=function(){
-
-
-appState.settings.dateFont =
-Number(this.value);
-
-
-saveApp();
-
-
-applySettings();
-
-
-};
-
-
-
-
-
-
-
-
-applySettings();
-
-
-
-
-
-
-
-
-
-
-/* =================================================
-TASK COLORS
-================================================= */
-
-
-
-const palette =
-document.querySelectorAll(
-"#colorPalette button"
-);
-
-
-
-
-palette.forEach(btn=>{
-
-
-btn.onclick=function(){
-
-
-appState.selectedColor =
-this.dataset.color;
-
-
-closePopup("colorPopup");
-
-
-};
-
-
-});
-
-
-
-
-
-
-
-
-
-/* =================================================
-TASK FUNCTIONS
-================================================= */
-
-
-
-function createTask(data){
-
-
-
-let task={
-
-
-id:uid(),
-
-
-title:data.title || "New Task",
-
-
-start:data.start,
-
-
-end:data.end,
-
-
-weight:data.weight ?? 10,
-
-
-color:data.color || "#2563eb",
-
-
-locked:false,
-
-
-status:"normal",
-
-
-type:data.type || "task"
-
-
-};
-
-
-
-appState.tasks.push(task);
-
-
-
-saveApp();
-
-
-renderTimeline();
-
-
-
-return task;
-
-
-}
-
-
-
-
-
-
-
-
-function deleteTask(id,shift=false){
-
-
-
-let index =
-appState.tasks.findIndex(
-t=>t.id===id
-);
-
-
-
-if(index===-1)
-return;
-
-
-
-
-
-let removed =
-appState.tasks[index];
-
-
-
-
-let duration =
-removed.end-removed.start;
-
-
-
-
-
-appState.tasks.splice(
-index,
-1
-);
-
-
-
-
-
-
-if(shift){
-
-
-appState.tasks
-.filter(
-t=>
-t.start>=removed.end
-&&
-!t.locked
-)
-.forEach(t=>{
-
-
-t.start-=duration;
-
-
-t.end-=duration;
-
-
-
-});
-
-
-}
-
-
-
-
-
-
-saveApp();
-
-
-renderTimeline();
-
-
-}
-
-
-
-
-
-
-
-
-
-
-function toggleLock(id){
-
-
-
-let task =
-appState.tasks.find(
-t=>t.id===id
-);
-
-
-
-if(!task)
-return;
-
-
-
-task.locked =
-!task.locked;
-
-
-
-saveApp();
-
-
-renderTimeline();
-
-
-}
-
-
-
-
-
-
-
-
-
-function editTask(id){
-
-
-let task =
-appState.tasks.find(
-t=>t.id===id
-);
-
-
-
-if(!task)
-return;
-
-
-
-
-appState.selectedTask=id;
-
-
-
-document.getElementById(
-"editTitle"
-).value=task.title;
-
-
-
-document.getElementById(
-"editStart"
-).value=
-new Date(task.start)
-.toISOString()
-.slice(0,16);
-
-
-
-document.getElementById(
-"editEnd"
-).value=
-new Date(task.end)
-.toISOString()
-.slice(0,16);
-
-
-
-document.getElementById(
-"editWeight"
-).value=
-task.weight;
-
-
-
-document.getElementById(
-"editColor"
-).value=
-task.color;
-
-
-
-openPopup("editPopup");
-
-
-
-}
-
-
-
-
-
-
-
-
-document
-.getElementById("saveEdit")
-.onclick=function(){
-
-
-let id =
-appState.selectedTask;
-
-
-
-let task =
-appState.tasks.find(
-t=>t.id===id
-);
-
-
-
-if(!task)
-return;
-
-
-
-
-task.title =
-editTitle.value;
-
-
-
-task.start =
-new Date(editStart.value)
-.getTime();
-
-
-
-task.end =
-new Date(editEnd.value)
-.getTime();
-
-
-
-task.weight =
-Number(editWeight.value);
-
-
-
-task.color =
-editColor.value;
-
-
-
-
-saveApp();
-
-
-renderTimeline();
-
-
-closePopup("editPopup");
-
-
-};
-
-
-
-
-
-
-
-
-
-document
-.getElementById("cancelEdit")
-.onclick=function(){
-
-
-closePopup("editPopup");
-
-
-};
-
-
-
-
-
-
-
-
-
-/* DELETE POPUP */
-
-let deleteTarget=null;
-
-
-
-function askDelete(id){
-
-
-deleteTarget=id;
-
-
-openPopup("deletePopup");
-
-
-}
-
-
-
-document
-.getElementById("deleteOnly")
-.onclick=function(){
-
-
-deleteTask(
-deleteTarget,
-false
-);
-
-
-closePopup("deletePopup");
-
-
-};
-
-
-
-
-document
-.getElementById("deleteShift")
-.onclick=function(){
-
-
-deleteTask(
-deleteTarget,
-true
-);
-
-
-closePopup("deletePopup");
-
-
-};
-
-
-
-
-document
-.getElementById("deleteCancel")
-.onclick=function(){
-
-
-closePopup("deletePopup");
-
-
-};
-
-
-
-
-
-
-</script>
-<script>
-
-/* =================================================
-TIMELINE RENDER
-================================================= */
-
-
-function renderTimeline(){
-
-
-const container =
-document.getElementById("timeline");
-
-
-
-if(!container)
-return;
-
-
-
-
-container.innerHTML =
-`<h3>Today's Plan</h3>`;
-
-
-
-
-
-let tasks =
-[...appState.tasks]
-.sort(
-(a,b)=>a.start-b.start
-);
-
-
-
-
-
-if(tasks.length===0){
-
-
-container.innerHTML +=
-`
-<p style="color:gray">
-No tasks yet.
-</p>
-`;
-
-return;
-
-
-}
-
-
-
-
-
-
-tasks.forEach(task=>{
-
-
-
-let card =
-document.createElement("div");
-
-
-
-card.className =
-"task-card";
-
-
-
-
-
-card.style.borderLeftColor =
-task.color;
-
-
-
-
-card.innerHTML = `
-
-
-<div class="task-top">
-
-
-<div class="task-title">
-
-${task.title}
-
-</div>
-
-
-
-<div class="task-time">
-
-${formatTime(task.start)}
--
-${formatTime(task.end)}
-
-</div>
-
-
-</div>
-
-
-
-
-
-<div class="task-meta">
-
-
-<span class="badge">
-
-Weight:
-${task.weight}
-
-</span>
-
-
-
-<span class="badge">
-
-${task.status}
-
-</span>
-
-
-
-
-<span class="badge">
-
-${Math.round((task.end-task.start)/60000)}
-min
-
-</span>
-
-
-
-</div>
-
-
-
-
-
-<div class="task-actions">
-
-
-<button
-class="icon ghost lock-btn">
-
-${task.locked?"🔒":"🔓"}
-
-</button>
-
-
-
-
-<button
-class="icon ghost edit-btn">
-
-⚙️
-
-</button>
-
-
-
-
-
-<button
-class="icon danger delete-btn">
-
-🗑️
-
-</button>
-
-
-
-</div>
-
-
-`;
-
-
-
-
-
-
-
-card
-.querySelector(".lock-btn")
-.onclick=function(){
-
-
-toggleLock(task.id);
-
-
-};
-
-
-
-
-
-card
-.querySelector(".edit-btn")
-.onclick=function(){
-
-
-editTask(task.id);
-
-
-};
-
-
-
-
-
-card
-.querySelector(".delete-btn")
-.onclick=function(){
-
-
-askDelete(task.id);
-
-
-};
-
-
-
-
-
-container.appendChild(card);
-
-
-
-});
-
-
-
-}
-
-
-
-
-
-
-
-
-
-/* =================================================
-SMART REBALANCE ENGINE
-================================================= */
-
-
-
-function smartRebalance(delayMinutes){
-
-
-
-let tasks =
-[...appState.tasks];
-
-
-
-let now =
-Date.now();
-
-
-
-let delay =
-delayMinutes*60000;
-
-
-
-
-
-let active =
-tasks.find(
-t=>
-t.start<=now
-&&
-t.end>now
-);
-
-
-
-
-
-
-let future =
-tasks.filter(
-t=>
-t.start>=now
-&&
-!t.locked
-);
-
-
-
-
-
-if(future.length===0)
-return;
-
-
-
-
-
-
-let endBoundary =
-Math.max(
-...tasks.map(
-t=>t.end
-)
-
-);
-
-
-
-
-
-
-let available =
-endBoundary -
-(now+delay);
-
-
-
-
-
-
-
-if(available<=0)
-return;
-
-
-
-
-
-
-let blocks =
-future
-.filter(
-t=>!t.locked
-);
-
-
-
-
-
-
-
-
-let totalWeight =
-blocks.reduce(
-(sum,t)=>
-sum+t.weight,
-0
-);
-
-
-
-
-
-
-
-let cursor =
-now+delay;
-
-
-
-
-
-
-blocks.forEach(task=>{
-
-
-
-let share =
-available*
-(task.weight/totalWeight);
-
-
-
-
-if(share<60000)
-share=60000;
-
-
-
-
-
-task.start =
-cursor;
-
-
-
-task.end =
-cursor+share;
-
-
-
-
-cursor =
-task.end;
-
-
-
-
-
-
-});
-
-
-
-
-
-
-
-saveApp();
-
-
-renderTimeline();
-
-
-
-}
-
-
-
-
-
-
-
-
-
-/* =================================================
-AUTOMATIC SCHEDULER
-================================================= */
-
-
-
-function generateAutomaticSchedule(){
-
-
-
-let start =
-document
-.getElementById("scheduleStart")
-.value;
-
-
-
-let end =
-document
-.getElementById("scheduleEnd")
-.value;
-
-
-
-
-let pattern =
-document
-.getElementById("schedulePattern")
-.value;
-
-
-
-
-
-let rest =
-Number(
-document
-.getElementById("scheduleRest")
-.value
-);
-
-
-
-
-
-
-let specialtyCount =
-Number(
-document
-.getElementById("specialCount")
-.value
-);
-
-
-
-
-
-let generalCount =
-Number(
-document
-.getElementById("generalCount")
-.value
-);
-
-
-
-
-
-
-let subjects=[];
-
-
-
-
-for(let i=1;i<=specialtyCount;i++){
-
-
-subjects.push({
-
-title:"Specialty "+i,
-
-type:"specialty",
-
-weight:10
-
-
-});
-
-
-}
-
-
-
-
-
-for(let i=1;i<=generalCount;i++){
-
-
-subjects.push({
-
-title:"General "+i,
-
-type:"general",
-
-weight:5
-
-
-});
-
-
-}
-
-
-
-
-
-
-
-let ordered=[];
-
-
-
-
-let special =
-subjects.filter(
-s=>s.type==="specialty"
-);
-
-
-let general =
-subjects.filter(
-s=>s.type==="general"
-);
-
-
-
-
-
-let max =
-Math.max(
-special.length,
-general.length
-);
-
-
-
-
-
-
-for(let i=0;i<max;i++){
-
-
-
-if(pattern==="sp"){
-
-
-if(special[i])
-ordered.push(special[i]);
-
-if(general[i])
-ordered.push(general[i]);
-
-
-}
-
-else{
-
-
-if(general[i])
-ordered.push(general[i]);
-
-
-if(special[i])
-ordered.push(special[i]);
-
-
-}
-
-
-
-}
-
-
-
-
-
-
-
-let now =
-new Date();
-
-
-
-let day =
-new Date();
-
-
-day.setHours(
-Number(start.split(":")[0]),
-Number(start.split(":")[1]),
-0,
-0
-);
-
-
-
-
-
-let endTime =
-new Date();
-
-
-endTime.setHours(
-Number(end.split(":")[0]),
-Number(end.split(":")[1]),
-0,
-0
-);
-
-
-
-
-
-let total =
-endTime-day;
-
-
-
-let each =
-(
-total -
-(rest*60000*(ordered.length-1))
-)
-/ordered.length;
-
-
-
-
-
-
-
-
-ordered.forEach(s=>{
-
-
-
-createTask({
-
-title:s.title,
-
-start:day.getTime(),
-
-end:
-day.getTime()+each,
-
-weight:s.weight
-
-
-});
-
-
-
-day =
-new Date(
-day.getTime()
+return Date.now()
 +
-each
-+
-rest*60000
-);
-
-
-
-});
-
-
-
-
-
-
-
-renderTimeline();
-
+Math.random()
+.toString(36)
+.substring(2);
 
 
 }
 
 
 
-
-
-
-document
-.getElementById("generateSchedule")
-.onclick=function(){
-
-
-generateAutomaticSchedule();
-
-
-};
-
-
-
-
-
-
-
-/* =================================================
-SMART REBALANCE BUTTON
-================================================= */
-
-
-document
-.getElementById("rebalanceBtn")
-.onclick=function(){
-
-
-smartRebalance(
-Number(
-document
-.getElementById("rebalanceDelay")
-.value
-)
-
-);
-
-
-
-closePopup("rebalancePopup");
-
-
-};
-
-
-
-
-
-
-
-/* INITIAL RENDER */
-
-
-renderTimeline();
-
-
-
-</script>
-<script>
-
-/* =================================================
-TO-DO SYSTEM
-================================================= */
-
-
-const todoInput =
-document.getElementById("todoInput");
-
-
-const todoList =
-document.getElementById("todoList");
-
-
-
-
-let todos =
-JSON.parse(
-localStorage.getItem("timeline_todos") || "[]"
-);
-
-
-
-
-
-function saveTodos(){
-
+function save(){
 
 localStorage.setItem(
-"timeline_todos",
-JSON.stringify(todos)
+STORAGE_KEY,
+JSON.stringify(tasks)
+
 );
 
 
-}
-
-
-
-
-
-function renderTodos(){
-
-
-
-todoList.innerHTML="";
-
-
-
-todos.forEach((todo,index)=>{
-
-
-
-let div =
-document.createElement("div");
-
-
-
-div.className="badge";
-
-
-
-div.style.display="flex";
-
-div.style.justifyContent="space-between";
-
-div.style.marginTop="8px";
-
-
-
-
-
-div.innerHTML=
-`
-
-<span>
-
-${todo}
-
-</span>
-
-
-<button
-style="
-background:#ef4444;
-padding:3px 8px;
-min-height:25px;
-">
-
-×
-
-</button>
-
-`;
-
-
-
-
-
-div.querySelector("button")
-.onclick=function(){
-
-
-todos.splice(index,1);
-
-saveTodos();
-
-renderTodos();
-
-
-};
-
-
-
-
-
-todoList.appendChild(div);
-
-
-});
+render();
 
 
 }
@@ -4258,152 +636,26 @@ todoList.appendChild(div);
 
 
 
-document
-.getElementById("todoAddBtn")
-.onclick=function(){
+
+function load(){
+
+try{
 
 
-let value =
-todoInput.value.trim();
-
-
-
-if(!value)
-return;
-
-
-
-
-todos.push(value);
-
-
-
-saveTodos();
-
-renderTodos();
-
-
-
-todoInput.value="";
-
-
-};
-
-
-
-
-
-
-renderTodos();
-
-
-
-
-
-
-
-
-
-/* =================================================
-READY PROGRAM SYSTEM
-================================================= */
-
-
-
-function saveProgram(name){
-
-
-
-let program={
-
-
-id:uid(),
-
-
-name:name,
-
-
-tasks:
+tasks =
 JSON.parse(
-JSON.stringify(
-appState.tasks
-)
-)
+localStorage.getItem(STORAGE_KEY)
+||
+"[]"
 
-
-};
-
-
-
-
-
-
-appState.programs.push(program);
-
-
-
-saveApp();
-
-
-renderPrograms();
-
-
-}
-
-
-
-
-
-
-
-function renderPrograms(){
-
-
-
-let select =
-document
-.getElementById(
-"readyProgramSelect"
 );
 
 
+}catch(e){
 
-if(!select)
-return;
+tasks=[];
 
-
-
-
-select.innerHTML=
-`
-<option>
-No program
-</option>
-`;
-
-
-
-
-
-appState.programs
-.forEach(p=>{
-
-
-let option =
-document.createElement("option");
-
-
-option.value=p.id;
-
-
-option.textContent=p.name;
-
-
-select.appendChild(option);
-
-
-});
-
+}
 
 
 }
@@ -4413,1709 +665,27 @@ select.appendChild(option);
 
 
 
-
-
-function applyProgram(id){
-
-
-
-let program =
-appState.programs
-.find(
-p=>p.id===id
-);
-
-
-
-
-if(!program)
-return;
-
-
-
-
-
-let copied =
-JSON.parse(
-JSON.stringify(
-program.tasks
-)
-);
-
-
-
-
-
-
-copied.forEach(t=>{
-
-
-t.id=uid();
-
-
-
-let old =
-Date.now();
-
-
-
-let offset =
-t.start-old;
-
-
-
-
-t.start =
-old+offset;
-
-
-
-t.end =
-old+
-(t.end-t.start);
-
-
-
-});
-
-
-
-
-
-
-appState.tasks.push(
-...copied
-);
-
-
-
-saveApp();
-
-
-renderTimeline();
-
-
-
-}
-
-
-
-
-
-
-
-document
-.getElementById("applyProgramBtn")
-.onclick=function(){
-
-
-
-let id =
-document
-.getElementById(
-"readyProgramSelect"
-)
-.value;
-
-
-
-applyProgram(id);
-
-
-};
-
-
-
-
-
-
-
-
-
-
-/* =================================================
-EXPORT CSV
-================================================= */
-
-
-function exportCSV(){
-
-
-
-let csv =
-"title,start,end,weight\n";
-
-
-
-
-appState.tasks.forEach(t=>{
-
-
-csv +=
-`${t.title},${new Date(t.start).toISOString()},${new Date(t.end).toISOString()},${t.weight}\n`;
-
-
-});
-
-
-
-
-
-
-
-let blob =
-new Blob(
-[csv],
-{
-type:"text/csv"
-}
-);
-
-
-
-
-
-
-let a =
-document.createElement("a");
-
-
-
-a.href =
-URL.createObjectURL(blob);
-
-
-
-a.download =
-"study_plan.csv";
-
-
-
-a.click();
-
-
-}
-
-
-
-
-
-
-
-
-
-/* =================================================
-IMPORT CSV
-================================================= */
-
-
-function importCSV(file){
-
-
-
-let reader =
-new FileReader();
-
-
-
-
-
-reader.onload=function(){
-
-
-
-let rows =
-reader.result
-.split("\n")
-.slice(1);
-
-
-
-
-
-
-rows.forEach(row=>{
-
-
-let data =
-row.split(",");
-
-
-
-if(data.length<4)
-return;
-
-
-
-
-
-
-createTask({
-
-title:data[0],
-
-
-start:
-new Date(data[1])
-.getTime(),
-
-
-
-end:
-new Date(data[2])
-.getTime(),
-
-
-
-weight:
-Number(data[3])
-
-
-});
-
-
-
-});
-
-
-
-
-
-
-renderTimeline();
-
-
-
-};
-
-
-
-
-
-
-reader.readAsText(file);
-
-
-}
-
-
-
-
-
-
-
-
-
-/* =================================================
-INITIALIZE
-================================================= */
-
-
-renderPrograms();
-
-
-renderTimeline();
-
-/* =================================================
-PART 7A
-SMART DAILY ENGINE
-Weight Based Time Allocation
-================================================= */
-
-
-/*
-ساختار جدید هر Task:
-
-weight:
-0 تا 10
-
-locked:
-اگر true باشد زمانش تغییر نمی‌کند
-
-*/
-
-
-function normalizeWeights(){
-
-
-    appState.tasks.forEach(task=>{
-
-
-        if(task.weight===undefined){
-
-            task.weight=10;
-
-        }
-
-
-        task.weight=Math.max(
-            0,
-            Math.min(
-                10,
-                Number(task.weight)
-            )
-        );
-
-
-    });
-
-
-}
-
-
-
-
-
-
-
-/*
-گرفتن بلوک های قابل تغییر
-*/
-
-
-function getFlexibleBlocks(){
-
-
-    return appState.tasks.filter(task=>{
-
-
-        return (
-            !task.locked
-            &&
-            task.type!=="break"
-        );
-
-
-    });
-
-
-}
-
-
-
-
-
-
-
-
-
-/*
-محاسبه زمان باقی مانده
-*/
-
-
-function getAvailableStudyTime(tasks){
-
-
-
-    if(tasks.length===0)
-    return 0;
-
-
-
-
-    let start =
-    Math.min(
-        ...tasks.map(t=>t.start)
-    );
-
-
-
-    let end =
-    Math.max(
-        ...tasks.map(t=>t.end)
-    );
-
-
-
-    return end-start;
-
-
-}
-
-
-
-
-
-
-
-
-
-/*
-Smart Daily اصلی
-
-
-همه درس ها را مثل بلوک می بیند
-و زمان را بر اساس Weight تقسیم می کند
-
-*/
-
-
-function runSmartDaily(){
-
-
-
-    normalizeWeights();
-
-
-
-
-    let tasks =
-    getFlexibleBlocks();
-
-
-
-
-    if(tasks.length===0){
-
-        alert(
-        "No flexible tasks found"
-        );
-
-        return;
-
-    }
-
-
-
-
-
-
-
-    /*
-    زمان کل قابل استفاده
-
-    شامل فاصله فعلی برنامه
-    */
-
-
-    let totalTime =
-    getAvailableStudyTime(
-        appState.tasks
-    );
-
-
-
-
-
-
-    /*
-    حذف زمان های قفل شده
-    */
-
-
-    let lockedTime =
-    appState.tasks
-
-    .filter(t=>t.locked)
-
-    .reduce(
-        (sum,t)=>
-        sum+(t.end-t.start),
-        0
-    );
-
-
-
-
-
-
-    let freeTime =
-    totalTime -
-    lockedTime;
-
-
-
-
-
-
-
-    if(freeTime<=0){
-
-        return;
-
-    }
-
-
-
-
-
-
-
-    let totalWeight =
-    tasks.reduce(
-
-        (sum,t)=>
-        sum+t.weight,
-
-        0
-
-    );
-
-
-
-
-
-
-
-    if(totalWeight===0){
-
-        totalWeight=
-        tasks.length;
-
-
-        tasks.forEach(
-            t=>t.weight=1
-        );
-
-    }
-
-
-
-
-
-
-
-    /*
-    شروع بازسازی
-
-    از اولین زمان آزاد
-    */
-
-
-    let cursor =
-    Math.min(
-        ...tasks.map(t=>t.start)
-    );
-
-
-
-
-
-
-    tasks.sort(
-        (a,b)=>
-        a.start-b.start
-    );
-
-
-
-
-
-
-
-
-    tasks.forEach(task=>{
-
-
-
-        let duration =
-
-        freeTime *
-
-        (
-            task.weight /
-            totalWeight
-        );
-
-
-
-
-
-
-        /*
-        حداقل یک دقیقه
-
-        طبق درخواست قبلی
-        */
-
-
-        duration =
-        Math.max(
-            60000,
-            duration
-        );
-
-
-
-
-
-
-
-        task.start =
-        cursor;
-
-
-
-        task.end =
-        cursor+duration;
-
-
-
-
-
-
-        cursor =
-        task.end;
-
-
-
-
-
-
-    });
-
-
-
-
-
-
-
-
-    saveApp();
-
-    renderTimeline();
-
-
-
-
-
-
-    showSmartMessage(
-    "Smart Daily recalculated"
-    );
-
-
-}
-
-
-
-
-
-
-
-
-
-/*
-تابع پیام کوچک
-*/
-
-
-function showSmartMessage(text){
-
-
-    let old =
-    document.getElementById(
-        "smart-message"
-    );
-
-
-
-    if(old)
-    old.remove();
-
-
-
-
-
-    let div =
-    document.createElement("div");
-
-
-
-    div.id="smart-message";
-
-
-
-    div.innerHTML=text;
-
-
-
-    div.style.position="fixed";
-
-    div.style.bottom="20px";
-
-    div.style.left="50%";
-
-    div.style.transform=
-    "translateX(-50%)";
-
-
-
-    div.style.background=
-    "#111827";
-
-
-    div.style.color=
-    "white";
-
-
-    div.style.padding=
-    "12px 18px";
-
-
-    div.style.borderRadius=
-    "12px";
-
-
-    div.style.zIndex=
-    "9999";
-
-
-
-
-    document.body.appendChild(div);
-
-
-
-
-    setTimeout(()=>{
-
-        div.remove();
-
-    },2500);
-
-
-
-}
-
-
-
-
-
-
-
-
-
-/*
-اتصال به دکمه Smart Rebalance فعلی
-
-بعداً با Smart Delay کامل جایگزین می‌شود
-*/
-
-
-const oldRebalanceButton =
-document.getElementById(
-"rebalanceBtn"
-);
-
-
-
-if(oldRebalanceButton){
-
-
-oldRebalanceButton.onclick=function(){
-
-
-    runSmartDaily();
-
-
-};
-
-
-}
-
-
-
-
-
-
-
-/*
-تغییر وزن سریع از بیرون
-
-مثال:
-
-setWeight(id,8)
-
-*/
-
-
-function setWeight(id,value){
-
-
-
-    let task =
-    appState.tasks.find(
-        t=>t.id===id
-    );
-
-
-
-    if(!task)
-    return;
-
-
-
-    task.weight =
-    Math.max(
-        0,
-        Math.min(
-            10,
-            Number(value)
-        )
-    );
-
-
-
-    saveApp();
-
-    renderTimeline();
-
-
-
-}
-
-
-
-
-
-
-
-/*
-قفل کردن بلوک
-*/
-
-
-function setLock(id,state=true){
-
-
-
-    let task =
-    appState.tasks.find(
-        t=>t.id===id
-    );
-
-
-
-    if(!task)
-    return;
-
-
-
-    task.locked=state;
-
-
-
-    saveApp();
-
-    renderTimeline();
-
-
-}
-
-/* =====================================================
- AUTO SCHEDULER ENGINE v2
-===================================================== */
-
-
-const autoScheduler = {
-
-
-generate(config){
-
-
-const {
-date,
-startTime,
-endTime,
-specialties,
-generals,
-pattern,
-rest,
-language,
-languageDuration,
-languageAttach
-}=config;
-
-
-
-let start = this.timeToMinutes(startTime);
-let end   = this.timeToMinutes(endTime);
-
-
-/*
- عبور از نیمه شب
-مثال:
-09:00 تا 01:00
-*/
-
-if(end<=start){
-    end+=1440;
-}
-
-
-
-let totalMinutes=end-start;
-
-
-
-let subjects=[];
-
-
-/*
- ساخت دور اول و دوم
-*/
-
-let maxRepeat=0;
-
-
-specialties.forEach(x=>{
-    maxRepeat=Math.max(maxRepeat,x.repeat||1);
-});
-
-
-let rounds=[];
-
-
-
-for(let r=0;r<maxRepeat;r++){
-
-
-let specIndex=0;
-let genIndex=0;
-
-
-while(
-specIndex<specialties.length ||
-genIndex<generals.length
-){
-
-
-if(pattern==="SG"){
-
-
-if(specIndex<specialties.length){
-
-rounds.push({
-...specialties[specIndex],
-type:"specialty"
-});
-
-specIndex++;
-
-}
-
-
-if(genIndex<generals.length){
-
-rounds.push({
-...generals[genIndex],
-type:"general"
-});
-
-genIndex++;
-
-}
-
-
-}
-
-
-
-else{
-
-
-if(genIndex<generals.length){
-
-rounds.push({
-...generals[genIndex],
-type:"general"
-});
-
-genIndex++;
-
-}
-
-
-
-if(specIndex<specialties.length){
-
-rounds.push({
-...specialties[specIndex],
-type:"specialty"
-});
-
-specIndex++;
-
-}
-
-
-}
-
-
-}
-
-}
-
-
-
-/*
- اضافه کردن زبان چسبیده
-*/
-
-if(language){
-
-
-let index =
-rounds.findIndex(
-x=>x.title===languageAttach
-);
-
-
-if(index!==-1){
-
-
-rounds.splice(
-index+1,
-0,
-{
-title:language,
-weight:languageDuration,
-fixed:true,
-duration:languageDuration,
-type:"language"
-}
-);
-
-
-}
-
-}
-
-
-
-/*
- حذف زمان استراحت
-*/
-
-
-let totalRest =
-(rest || 0)
-*
-Math.max(0,rounds.length-1);
-
-
-
-let studyTime =
-totalMinutes-totalRest;
-
-
-
-if(studyTime<0){
-
-alert("Time range too small");
-return [];
-
-}
-
-
-
-/*
- محاسبه مجموع وزن
-*/
-
-
-let weightSum=
-rounds.reduce(
-(a,b)=>
-a+(Number(b.weight)||1),
-0
-);
-
-
-
-let result=[];
-
-let cursor=start;
-
-
-
-rounds.forEach(
-(item,index)=>{
-
-
-let duration;
-
-
-
-if(item.fixed){
-
-duration=item.duration;
-
-}
-
-else{
-
-
-duration=
-Math.floor(
-studyTime *
-(
-(Number(item.weight)||1)
-/
-weightSum
-)
-);
-
-
-}
-
-
-
-result.push({
-
-title:item.title,
-
-weight:item.weight||1,
-
-start:this.minutesToDate(
-date,
-cursor
-),
-
-end:this.minutesToDate(
-date,
-cursor+duration
-),
-
-type:item.type
-
-});
-
-
-
-cursor+=duration;
-
-
-
-if(index!==rounds.length-1){
-
-cursor+=rest;
-
-}
-
-
-});
-
-
-
-return result;
-
-
-},
-
-
-
-
-/*
- تبدیل ساعت
-*/
-
-
-timeToMinutes(time){
-
-
-let [h,m]=
-time.split(":")
-.map(Number);
-
-
-return h*60+m;
-
-
-},
-
-
-
-
-minutesToDate(date,min){
-
-
-let d=new Date(date);
-
-
-if(min>=1440){
-
-d.setDate(
-d.getDate()+1
-);
-
-min-=1440;
-
-}
-
-
-d.setHours(
-Math.floor(min/60)
-);
-
-d.setMinutes(
-min%60
-);
-
-d.setSeconds(0);
-d.setMilliseconds(0);
-
-
-return d.getTime();
-
-
-}
-
-
-};
-
-
-
-
-
-/* تست دستی در کنسول */
-
-window.autoScheduler=autoScheduler;
-/* =====================================================
- AUTO SCHEDULER UI CONNECTOR
-===================================================== */
-
-
-let autoSpecialties=[];
-let autoGenerals=[];
-
-
-
-function createAutoSubject(type){
-
-
-let title=prompt(
-type==="specialty"
-?"نام درس تخصصی:"
-:"نام درس عمومی:"
-);
-
-
-if(!title) return;
-
-
-
-let weight=Number(
-prompt(
-"Weight (0-10):",
-"5"
-)
-)||1;
-
-
-
-let repeat=Number(
-prompt(
-"Repeat:",
-"2"
-)
-)||1;
-
-
-
-let subject={
-
-id:
-Date.now()+Math.random(),
-
-title:title,
-
-weight:weight,
-
-repeat:repeat
-
-};
-
-
-
-if(type==="specialty"){
-
-autoSpecialties.push(subject);
-
-}
-
-else{
-
-autoGenerals.push(subject);
-
-}
-
-
-
-renderAutoSubjects();
-
-
-}
-
-
-
-
-
-function renderAutoSubjects(){
+function showToast(text){
 
 
 let box=
-document.getElementById(
-"autoSubjectList"
-);
+document
+.getElementById("toast");
 
 
-if(!box) return;
+box.innerText=text;
 
 
-box.innerHTML="";
+box.classList.add("show");
 
 
+setTimeout(()=>{
 
-[
-...autoSpecialties.map(
-x=>({...x,type:"specialty"})
-),
 
-...autoGenerals.map(
-x=>({...x,type:"general"})
-)
+box.classList.remove("show");
 
-]
-.forEach(
-s=>{
 
-
-let div=
-document.createElement("div");
-
-
-div.className="badge";
-
-
-div.innerHTML=
-
-`
-${s.title}
-
-<br>
-
-Weight:${s.weight}
-
-<br>
-
-Repeat:${s.repeat}
-
-`;
-
-
-
-box.appendChild(div);
-
-
-
-});
-
-}
-
-
-
-
-
-function generateAutomaticPlan(){
-
-
-
-let start=
-document.querySelector(
-"#schedulerPopup input[type=time]"
-)
-?.value
-||"09:00";
-
-
-
-let endInputs=
-document.querySelectorAll(
-"#schedulerPopup input[type=time]"
-);
-
-
-let end=
-endInputs[1]?.value
-||"01:00";
-
-
-
-let rest=
-Number(
-document.querySelector(
-"#schedulerPopup input[type=number]"
-)?.value
-)
-||10;
-
-
-
-let pattern=
-document.querySelector(
-"#schedulerPopup select"
-)
-?.value
-.includes("Specialty")
-?
-"SG"
-:
-"GS";
-
-
-
-let date=
-new Date();
-
-
-let result=
-autoScheduler.generate({
-
-date:date,
-
-startTime:start,
-
-endTime:end,
-
-rest,
-
-pattern,
-
-specialties:autoSpecialties,
-
-generals:autoGenerals
-
-});
-
-
-
-if(!result.length){
-
-alert(
-"Unable to generate plan"
-);
-
-return;
-
-}
-
-
-
-/*
- تبدیل به Task برنامه
-*/
-
-
-let tasks =
-appState.tasks;
-
-
-
-result.forEach(t=>{
-
-
-tasks.push({
-
-id:
-Date.now()+Math.random(),
-
-
-title:t.title,
-
-
-start:t.start,
-
-
-end:t.end,
-
-
-weight:t.weight,
-
-
-locked:false,
-
-
-color:null
-
-
-});
-
-
-});
-
-
-
-saveApp(tasks);
-
-
-renderTimeline();
-
-
-
-alert(
-"Automatic schedule created"
-);
-
-
-}
-
-
-
-
-
-/*
- اتصال دکمه ها
-*/
-
-
-document.addEventListener(
-"click",
-function(e){
-
-
-
-if(
-e.target.innerText
-.includes("Generate Preview")
-){
-
-
-generateAutomaticPlan();
-
-
-}
-
-
-
-});
-
-
-
-
-
-window.autoSubjects={
-
-addSpecialty:
-()=>createAutoSubject("specialty"),
-
-addGeneral:
-()=>createAutoSubject("general")
-
-};
-
-
-
-
-if(!generated.length){
-
-alert(
-"برنامه ساخته نشد"
-);
-
-return;
-
-}
-
-
-
-
-let tasks =
-appState.tasks;
-
-
-
-generated.forEach(item=>{
-
-
-tasks.push({
-
-id:
-Date.now()+Math.random(),
-
-
-title:
-item.title,
-
-
-start:
-item.start,
-
-
-end:
-item.end,
-
-
-weight:
-item.weight,
-
-
-locked:false,
-
-
-type:
-item.type,
-
-
-color:null
-
-
-});
-
-
-});
-
-
-
-
-saveApp(tasks);
-
-
-
-renderTimeline();
-
-
-
-showAutoPreview(generated);
-
-
-}
-
-
-
-
-
-
-
-function showAutoPreview(data){
-
-
-
-let text=
-"برنامه ساخته شد:\n\n";
-
-
-
-data.forEach(x=>{
-
-
-text+=
-
-`${x.title}
-${formatTime(x.start)}
--
-${formatTime(x.end)}
-Weight:${x.weight}
-
-`;
-
-});
-
-
-
-alert(text);
+},2000);
 
 
 
@@ -6130,7 +700,7 @@ alert(text);
 function formatTime(ms){
 
 
-const d=
+let d=
 new Date(ms);
 
 
@@ -6157,27 +727,1955 @@ String(d.getMinutes())
 
 
 
+function duration(task){
 
+return Math.round(
+(task.end-task.start)
+/60000
+);
 
-document
-.addEventListener(
-"click",
-function(e){
-
-
-if(
-e.target.id==="generateSchedule"
-){
-
-generateAutomaticPlan();
 
 }
 
 
+
+
+
+
+
+
+
+// ===============================
+// ADD TASK
+// ===============================
+
+
+
+document
+.getElementById("addBtn")
+.onclick=function(){
+
+
+
+let title=
+document
+.getElementById("title")
+.value
+.trim();
+
+
+
+let start=
+new Date(
+document
+.getElementById("start")
+.value
+)
+.getTime();
+
+
+
+let end=
+new Date(
+document
+.getElementById("end")
+.value
+)
+.getTime();
+
+
+
+
+let weight=
+Number(
+document
+.getElementById("weight")
+.value
+)
+||5;
+
+
+
+
+
+if(!title){
+
+alert(
+"نام درس را وارد کن"
+);
+
+return;
+
+}
+
+
+
+
+if(
+!start ||
+!end ||
+end<=start
+){
+
+alert(
+"زمان اشتباه است"
+);
+
+return;
+
+}
+
+
+
+
+
+
+tasks.push({
+
+id:uid(),
+
+title:title,
+
+
+start:start,
+
+
+end:end,
+
+
+weight:
+Math.max(
+1,
+Math.min(
+10,
+weight
+)
+),
+
+
+locked:false,
+
+
+status:"pending"
+
+
 });
-</script>
+
+
+
+
+
+save();
+
+
+
+
+
+document
+.getElementById("title")
+.value="";
+
+
+};
+
+
+
+
+
+
+
+
+
+// ===============================
+// RENDER TIMELINE
+// ===============================
+
+
+
+function render(){
+
+
+
+let box=
+document
+.getElementById("timeline");
+
+
+
+box.innerHTML="";
+
+
+
+
+if(
+tasks.length===0
+){
+
+box.innerHTML=
+
+`
+<div class="card">
+هنوز برنامه‌ای وجود ندارد
+</div>
+`;
+
+return;
+
+
+}
+
+
+
+
+
+
+
+tasks
+.sort(
+(a,b)=>
+a.start-b.start
+
+)
+.forEach(task=>{
+
+
+
+let div=
+document
+.createElement("div");
+
+
+
+div.className="task";
+
+
+
+
+
+div.innerHTML=
+
+`
+
+<div class="task-title">
+
+${task.title}
 
 </div>
+
+
+<div class="small">
+
+${formatTime(task.start)}
+
+-
+
+${formatTime(task.end)}
+
+|
+
+${duration(task)} دقیقه
+
+</div>
+
+
+
+<div class="task-toolbar">
+
+
+<label class="small">
+
+W
+
+<input
+
+class="weight-input"
+
+type="number"
+
+min="1"
+
+max="10"
+
+value="${task.weight}"
+
+>
+
+</label>
+
+
+
+
+<button
+class="ghost icon lock">
+
+${task.locked?"🔒":"🔓"}
+
+</button>
+
+
+
+<button
+class="ghost icon edit">
+
+⚙
+
+</button>
+
+
+
+<button
+class="danger icon delete">
+
+🗑
+
+</button>
+
+
+
+</div>
+
+`;
+
+
+
+
+
+
+
+
+
+
+
+// Weight Change
+
+div
+.querySelector(".weight-input")
+.onchange=function(){
+
+
+task.weight=
+Number(this.value);
+
+
+
+if(task.weight<1)
+task.weight=1;
+
+
+if(task.weight>10)
+task.weight=10;
+
+
+
+save();
+
+
+
+};
+
+
+
+
+
+
+
+// Lock
+
+
+div
+.querySelector(".lock")
+.onclick=function(){
+
+
+task.locked=
+!task.locked;
+
+
+
+save();
+
+
+};
+
+
+
+
+
+
+// Edit
+
+
+div
+.querySelector(".edit")
+.onclick=function(){
+
+
+editTask(task.id);
+
+
+
+};
+
+
+
+
+
+
+// Delete
+
+
+div
+.querySelector(".delete")
+.onclick=function(){
+
+
+deleteTask(task.id);
+
+
+};
+
+
+
+
+
+
+box.appendChild(div);
+
+
+
+});
+
+
+
+}
+
+
+
+
+
+
+
+
+
+// ===============================
+// EDIT
+// ===============================
+
+
+
+function editTask(id){
+
+
+
+let task=
+tasks.find(
+t=>t.id===id
+);
+
+
+
+if(!task)
+return;
+
+
+
+
+let title=
+prompt(
+"نام درس:",
+task.title
+);
+
+
+
+if(title){
+
+task.title=title;
+
+}
+
+
+
+
+let weight=
+prompt(
+"Weight 1-10:",
+task.weight
+);
+
+
+
+if(weight){
+
+task.weight=
+Math.max(
+1,
+Math.min(
+10,
+Number(weight)
+)
+
+);
+
+
+}
+
+
+
+save();
+
+
+
+}
+
+
+
+
+
+
+
+
+
+// ===============================
+// DELETE
+// ===============================
+
+
+
+function deleteTask(id){
+
+
+
+let index=
+tasks.findIndex(
+t=>t.id===id
+);
+
+
+
+if(index===-1)
+return;
+
+
+
+
+
+if(
+confirm(
+"حذف شود؟"
+)
+
+){
+
+
+tasks.splice(
+index,
+1
+);
+
+
+save();
+
+
+}
+
+
+
+}
+
+
+
+
+
+
+
+// ===============================
+// SMART REBALANCE
+// ===============================
+
+
+
+document
+.getElementById("rebalanceBtn")
+.onclick=function(){
+
+
+
+let flexible=
+tasks.filter(
+t=>!t.locked
+);
+
+
+
+
+
+if(
+flexible.length===0
+){
+
+showToast(
+"Task آزاد وجود ندارد"
+);
+
+return;
+
+}
+
+
+
+
+
+let start=
+Math.min(
+...flexible.map(
+t=>t.start
+)
+);
+
+
+
+
+let end=
+Math.max(
+...flexible.map(
+t=>t.end
+)
+);
+
+
+
+
+let totalTime=
+end-start;
+
+
+
+
+
+let weightSum=
+flexible.reduce(
+(a,t)=>
+a+t.weight,
+0
+);
+
+
+
+
+
+let cursor=start;
+
+
+
+
+
+flexible
+.sort(
+(a,b)=>
+a.start-b.start
+)
+.forEach(t=>{
+
+
+
+let share=
+totalTime*
+(
+t.weight/
+weightSum
+);
+
+
+
+
+t.start=
+cursor;
+
+
+t.end=
+cursor+share;
+
+
+
+cursor=
+t.end;
+
+
+
+});
+
+
+
+
+
+
+save();
+
+
+
+showToast(
+"Smart Rebalance انجام شد"
+);
+
+
+
+};
+
+
+
+
+
+
+
+// ===============================
+// SETTINGS
+// ===============================
+
+
+
+document
+.getElementById("settingsBtn")
+.onclick=function(){
+
+
+settingsModal.style.display="flex";
+
+
+};
+
+
+
+
+
+document
+.getElementById("closeSettings")
+.onclick=function(){
+
+
+settingsModal.style.display="none";
+
+
+};
+
+
+
+
+
+
+document
+.getElementById("zoom")
+.oninput=function(){
+
+
+document
+.documentElement
+.style
+.setProperty(
+"--scale",
+this.value/100
+);
+
+
+localStorage.setItem(
+"zoom",
+this.value
+);
+
+
+
+};
+
+
+
+
+
+
+
+let oldZoom=
+localStorage.getItem(
+"zoom"
+);
+
+
+
+if(oldZoom){
+
+
+zoom.value=oldZoom;
+
+
+document
+.documentElement
+.style
+.setProperty(
+"--scale",
+oldZoom/100
+);
+
+
+}
+
+
+
+
+
+load();
+
+
+render();
+
+
+
+})();
+<script>
+
+
+// ===============================
+// DELETE + SHIFT SYSTEM
+// ===============================
+
+
+
+let deleteTarget=null;
+
+
+
+function openDelete(id){
+
+deleteTarget=id;
+
+
+let mode=
+confirm(
+"برای حذف و جلو کشیدن برنامه‌های بعدی OK بزن\n\nCancel = فقط حذف"
+);
+
+
+
+deleteTaskAdvanced(
+id,
+mode
+);
+
+
+
+}
+
+
+
+
+
+function deleteTaskAdvanced(id,shift){
+
+
+
+let index=
+tasks.findIndex(
+t=>t.id===id
+);
+
+
+
+if(index===-1)
+return;
+
+
+
+
+let removed=
+tasks[index];
+
+
+
+let gap=
+removed.end-
+removed.start;
+
+
+
+
+tasks.splice(
+index,
+1
+);
+
+
+
+
+
+if(shift){
+
+
+
+tasks
+.filter(
+t=>
+t.start>=removed.end
+&&
+!t.locked
+
+)
+.forEach(t=>{
+
+
+t.start-=gap;
+
+t.end-=gap;
+
+
+});
+
+
+}
+
+
+
+
+
+save();
+
+
+showToast(
+shift?
+"Deleted + shifted":
+"Deleted"
+
+);
+
+
+
+}
+
+
+
+
+
+
+
+
+
+// ===============================
+// REPLACE DELETE BUTTON ACTION
+// ===============================
+
+
+function connectDeleteButtons(){
+
+
+document
+.querySelectorAll(".delete")
+.forEach(btn=>{
+
+
+btn.onclick=function(){
+
+
+let task=
+this
+.closest(".task");
+
+
+
+let index=
+Array
+.from(
+document
+.querySelectorAll(".task")
+)
+.indexOf(task);
+
+
+
+let id=
+tasks[index]?.id;
+
+
+
+if(id)
+openDelete(id);
+
+
+
+};
+
+
+});
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+// ===============================
+// FULL EDIT SYSTEM
+// ===============================
+
+
+
+function fullEdit(id){
+
+
+
+let task=
+tasks.find(
+t=>t.id===id
+);
+
+
+
+if(!task)
+return;
+
+
+
+
+let start=
+prompt(
+"Start time:",
+formatTime(task.start)
+);
+
+
+
+let end=
+prompt(
+"End time:",
+formatTime(task.end)
+);
+
+
+
+if(start&&end){
+
+
+
+let s=
+start.split(":");
+
+let e=
+end.split(":");
+
+
+
+let sd=
+new Date(task.start);
+
+
+sd.setHours(
+Number(s[0]),
+Number(s[1])
+);
+
+
+
+let ed=
+new Date(task.start);
+
+
+ed.setHours(
+Number(e[0]),
+Number(e[1])
+);
+
+
+
+
+
+if(ed<=sd)
+ed.setDate(
+ed.getDate()+1
+);
+
+
+
+task.start=
+sd.getTime();
+
+
+task.end=
+ed.getTime();
+
+
+
+}
+
+
+
+
+
+save();
+
+
+
+}
+
+
+
+
+
+// ===============================
+// SMART DELAY
+// ===============================
+
+
+
+function smartDelay(minutes){
+
+
+
+let delay=
+Number(minutes)
+*
+60000;
+
+
+
+if(!delay)
+return;
+
+
+
+
+
+
+let now=
+Date.now();
+
+
+
+
+
+let future=
+tasks
+.filter(
+t=>
+t.start>=now
+&&
+!t.locked
+
+)
+.sort(
+(a,b)=>
+a.start-b.start
+);
+
+
+
+
+
+
+if(!future.length){
+
+showToast(
+"No future tasks"
+);
+
+
+return;
+
+
+}
+
+
+
+
+
+
+future
+.forEach(task=>{
+
+
+let factor=
+100/
+task.weight;
+
+
+
+let move=
+delay*
+(
+factor/10
+);
+
+
+
+task.start+=move;
+
+task.end+=move;
+
+
+
+});
+
+
+
+
+
+
+save();
+
+
+
+showToast(
+"Smart Delay applied"
+);
+
+
+
+}
+
+
+
+
+
+
+
+
+
+// ===============================
+// UNDO SYSTEM
+// ===============================
+
+
+
+let lastSnapshot=null;
+
+
+
+
+
+function snapshot(){
+
+
+lastSnapshot=
+JSON.stringify(tasks);
+
+
+}
+
+
+
+
+function undo(){
+
+
+
+if(!lastSnapshot){
+
+showToast(
+"Nothing to undo"
+);
+
+
+return;
+
+}
+
+
+
+tasks=
+JSON.parse(
+lastSnapshot
+);
+
+
+
+save();
+
+
+lastSnapshot=null;
+
+
+}
+
+
+
+
+
+
+
+// expose for testing
+
+window.scheduler={
+
+tasks,
+
+smartDelay,
+
+undo,
+
+snapshot
+
+};
+
+
+
+</script>
+<script>
+
+
+// ===============================
+// TODO SYSTEM
+// ===============================
+
+
+const TODO_KEY=
+"timeline_scheduler_todos";
+
+
+let todos=[];
+
+
+
+function loadTodos(){
+
+
+try{
+
+todos=
+JSON.parse(
+localStorage.getItem(TODO_KEY)
+||
+"[]"
+);
+
+
+}catch{
+
+todos=[];
+
+}
+
+
+
+}
+
+
+
+
+function saveTodos(){
+
+
+localStorage.setItem(
+TODO_KEY,
+JSON.stringify(todos)
+);
+
+
+renderTodos();
+
+
+}
+
+
+
+
+
+
+function renderTodos(){
+
+
+let old=
+document.getElementById(
+"todoBox"
+);
+
+
+
+if(!old)
+return;
+
+
+
+
+old.innerHTML="";
+
+
+
+todos.forEach(
+(todo,i)=>{
+
+
+let div=
+document.createElement("div");
+
+
+
+div.className="card";
+
+
+
+div.innerHTML=
+
+`
+
+${todo}
+
+
+
+<button
+class="danger">
+
+×
+
+
+</button>
+
+
+`;
+
+
+
+
+
+div.querySelector("button")
+.onclick=function(){
+
+
+todos.splice(i,1);
+
+
+saveTodos();
+
+
+};
+
+
+
+
+
+old.appendChild(div);
+
+
+
+});
+
+
+
+}
+
+
+
+
+
+
+
+
+
+function addTodo(){
+
+
+
+let text=
+prompt(
+"Task:"
+);
+
+
+
+if(!text)
+return;
+
+
+
+todos.push(text);
+
+
+
+saveTodos();
+
+
+}
+
+
+
+
+
+// ===============================
+// READY PROGRAM
+// ===============================
+
+
+const PROGRAM_KEY=
+"timeline_scheduler_programs";
+
+
+
+let programs=[];
+
+
+
+
+function loadPrograms(){
+
+
+try{
+
+
+programs=
+JSON.parse(
+localStorage.getItem(PROGRAM_KEY)
+||
+"[]"
+);
+
+
+
+}catch{
+
+
+programs=[];
+
+
+}
+
+
+
+}
+
+
+
+
+
+function savePrograms(){
+
+
+localStorage.setItem(
+PROGRAM_KEY,
+JSON.stringify(programs)
+);
+
+
+}
+
+
+
+
+
+
+
+function saveCurrentProgram(){
+
+
+
+let name=
+prompt(
+"Program name:"
+);
+
+
+
+if(!name)
+return;
+
+
+
+programs.push({
+
+id:uid(),
+
+name:name,
+
+tasks:
+JSON.parse(
+JSON.stringify(tasks)
+)
+
+
+});
+
+
+
+
+savePrograms();
+
+
+
+showToast(
+"Program saved"
+);
+
+
+
+}
+
+
+
+
+
+
+function applyProgram(){
+
+
+
+if(
+programs.length===0
+){
+
+showToast(
+"No program"
+);
+
+return;
+
+
+}
+
+
+
+let names=
+programs
+.map(
+(p,i)=>
+(i+1)+") "+p.name
+)
+.join("\n");
+
+
+
+let choose=
+Number(
+prompt(
+names
+)
+)
+-1;
+
+
+
+if(
+!programs[choose]
+)
+return;
+
+
+
+
+tasks=
+JSON.parse(
+JSON.stringify(
+programs[choose].tasks
+)
+);
+
+
+
+save();
+
+
+
+showToast(
+"Program loaded"
+);
+
+
+
+}
+
+
+
+
+
+
+
+
+
+// ===============================
+// EXPORT / IMPORT
+// ===============================
+
+
+
+function exportData(){
+
+
+let blob=
+new Blob(
+[
+JSON.stringify(
+tasks,
+null,
+2
+)
+],
+{
+type:"application/json"
+}
+);
+
+
+
+let a=
+document.createElement("a");
+
+
+
+a.href=
+URL.createObjectURL(blob);
+
+
+
+a.download=
+"study-plan.json";
+
+
+
+a.click();
+
+
+}
+
+
+
+
+
+
+function importData(){
+
+
+
+let input=
+document.createElement("input");
+
+
+input.type="file";
+
+
+input.accept=".json";
+
+
+
+input.onchange=function(e){
+
+
+
+let file=
+e.target.files[0];
+
+
+let reader=
+new FileReader();
+
+
+
+reader.onload=function(){
+
+
+try{
+
+
+tasks=
+JSON.parse(
+reader.result
+);
+
+
+save();
+
+
+
+showToast(
+"Imported"
+);
+
+
+
+}catch{
+
+
+alert(
+"Invalid file"
+);
+
+
+
+}
+
+
+};
+
+
+
+reader.readAsText(file);
+
+
+
+};
+
+
+
+input.click();
+
+
+
+}
+
+
+
+
+
+
+
+
+// ===============================
+// CREATE EXTRA BUTTONS
+// ===============================
+
+
+
+let header=
+document.querySelector("header");
+
+
+
+let tools=
+document.createElement("div");
+
+
+
+tools.className="row";
+
+
+
+tools.innerHTML=
+
+`
+
+<button
+class="ghost">
+
+📝 TO-DO
+
+</button>
+
+
+<button
+class="ghost">
+
+💾 Save Program
+
+</button>
+
+
+
+<button
+class="ghost">
+
+📂 Load Program
+
+</button>
+
+
+<button
+class="ghost">
+
+⬆ Export
+
+</button>
+
+
+<button
+class="ghost">
+
+⬇ Import
+
+</button>
+
+
+`;
+
+
+
+
+header.appendChild(tools);
+
+
+
+
+
+tools.children[0]
+.onclick=
+addTodo;
+
+
+tools.children[1]
+.onclick=
+saveCurrentProgram;
+
+
+
+tools.children[2]
+.onclick=
+applyProgram;
+
+
+
+tools.children[3]
+onclick=
+exportData;
+
+
+
+tools.children[4]
+.onclick=
+importData;
+
+
+
+
+
+
+
+
+// ===============================
+// INITIALIZE EXTRA DATA
+// ===============================
+
+
+loadTodos();
+
+loadPrograms();
+
+
+
+
+
+// ===============================
+// FINAL OVERRIDES
+// ===============================
+
+
+window.addEventListener(
+"beforeunload",
+function(){
+
+save();
+
+saveTodos();
+
+savePrograms();
+
+}
+
+);
+
+
+
+
+
+})();
+</script>
+
 
 </body>
 
