@@ -236,7 +236,7 @@
     <input id="programCsvFile" type="file" accept=".csv,text/csv" />
     <button id="importProgramCsv" class="ghost">Import CSV program(s)</button>
   </div>
-  <div class="small muted" style="margin-top:6px">CSV columns: program, id, parent_id, type, title, start, end, pinned, priority (priority is optional when importing)</div>
+  <div class="small muted" style="margin-top:6px">CSV columns: program, id, parent_id, type, title, start, end, pinned, weight (weight 0–10 optional; old “priority” also accepted)</div>
 </section>
 
 <div class="card">
@@ -244,7 +244,7 @@
     <label class="field">Title <input id="title" placeholder="Study for math..." /></label>
     <label class="field">Start <input id="start" type="datetime-local" /></label>
     <label class="field">End <input id="end" type="datetime-local" /></label>
-    <label class="field">Priority (%) <input id="newTaskPriority" type="number" min="10" max="500" step="10" value="100" /></label>
+    <label class="field">Weight (0–10) <input id="newTaskWeight" type="number" min="0" max="10" step="1" value="5" /></label>
     <label class="field full">Insert after (optional)
       <select id="insertAfter"><option value="">(append at end)</option></select>
     </label>
@@ -262,28 +262,25 @@
 <section class="card" style="margin-top:12px">
   <h2 style="margin:0 0 8px">Delay Control</h2>
   <div class="smart-controls">
-    <label class="field">Normal delay (minutes)
-      <input id="normalDelay" type="number" min="0" step="1" placeholder="30" />
-    </label>
-    <label class="field">Required rest time (minutes)
-      <input id="delay" type="number" min="0" step="1" placeholder="30" />
-    </label>
     <label class="field">Day ends at
       <input id="dayEnd" type="time" />
     </label>
+    <label class="field">Shift all by (minutes)
+      <input id="shiftMinutes" type="number" min="1" step="1" placeholder="10" />
+    </label>
   </div>
   <div class="smart-actions">
-    <button id="applyNormalDelay" class="ghost">Apply Delay</button>
+    <button id="applyShiftDelay" class="ghost">Delay</button>
     <button id="smartDelay">Smart Delay</button>
   </div>
   <div class="row" style="margin-top:8px;justify-content:space-between;flex-wrap:wrap">
-    <div class="small muted">Locked tasks never move. Smart Delay recalculates remaining tasks using their priorities.</div>
+    <div class="small muted">⏱ = duration locked · 🔒 = time locked · Smart Delay redistributes free time by weight (0–10).</div>
     <button id="undoSmartDelay" class="ghost" disabled>Undo Smart Delay</button>
   </div>
 </section>
 
 <div class="timeline" id="timeline"></div>
-<footer>Tip: Priority controls how remaining time is distributed by Smart Delay.</footer>
+<footer>Tip: Weight (0–10) controls how remaining time is distributed by Smart Delay. Use ⏱ to lock duration or 🔒 to lock exact times.</footer>
 <div id="toast" class="toast"></div>
 
 <div id="editModal" style="display:none" class="modal-overlay">
@@ -291,7 +288,7 @@
     <div style="font-weight:700;margin-bottom:8px">Edit task</div>
     <label class="field">Start <input id="modalStart" type="datetime-local" /></label>
     <label class="field" style="margin-top:8px">End <input id="modalEnd" type="datetime-local" /></label>
-    <label class="field" style="margin-top:8px">Priority (%) <input id="modalPriority" type="number" min="10" max="500" step="10" /></label>
+    <label class="field" style="margin-top:8px">Weight (0–10) <input id="modalWeight" type="number" min="0" max="10" step="1" /></label>
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
       <button id="modalCancel" class="ghost">Cancel</button>
       <button id="modalSave">Save</button>
@@ -417,8 +414,21 @@
 
   function normalizeTask(t){
     if(!t.status) t.status='pending';
-    if(!Number.isFinite(Number(t.priority))) t.priority=100;
-    t.priority=clamp(Number(t.priority)||100,10,500);
+    // Weight 0–10 (migrate from old priority if needed)
+    if(!Number.isFinite(Number(t.weight))){
+      if(Number.isFinite(Number(t.priority))) t.weight=clamp(Math.round(Number(t.priority)/50),0,10);
+      else t.weight=5;
+    }
+    t.weight=clamp(Number(t.weight)||0,0,10);
+    // Keep priority in sync for leftover paths
+    t.priority=Math.max(10,Math.round(t.weight*50)||10);
+    // Two lock types (migrate from old pinned)
+    if(t.lockTime==null) t.lockTime=!!t.pinned;
+    if(t.lockDuration==null) t.lockDuration=false;
+    t.lockTime=!!t.lockTime;
+    t.lockDuration=!!t.lockDuration;
+    // lockTime implies full lock; pinned stays as alias of lockTime
+    t.pinned=!!t.lockTime;
     if(!Number.isFinite(Number(t.originalDurationMs)) || Number(t.originalDurationMs)<=0){
       const d=Math.max(0,Number(t.end)-Number(t.start));
       t.originalDurationMs=d;
@@ -442,7 +452,7 @@
 
   const els={
     profileSelect:document.getElementById('profileSelect'), addProfile:document.getElementById('addProfile'), renameProfile:document.getElementById('renameProfile'), deleteProfile:document.getElementById('deleteProfile'), settingsBtn:document.getElementById('settingsBtn'),
-    title:document.getElementById('title'), start:document.getElementById('start'), end:document.getElementById('end'), newTaskPriority:document.getElementById('newTaskPriority'), addBtn:document.getElementById('addBtn'), timeline:document.getElementById('timeline'), clearAll:document.getElementById('clearAll'), delay:document.getElementById('delay'), normalDelay:document.getElementById('normalDelay'), applyNormalDelay:document.getElementById('applyNormalDelay'), smartDelay:document.getElementById('smartDelay'), undoSmartDelay:document.getElementById('undoSmartDelay'), dayEnd:document.getElementById('dayEnd'), insertAfter:document.getElementById('insertAfter'), makeBox:document.getElementById('makeBox'), addSubtask:document.getElementById('addSubtask'),
+    title:document.getElementById('title'), start:document.getElementById('start'), end:document.getElementById('end'), newTaskWeight:document.getElementById('newTaskWeight'), addBtn:document.getElementById('addBtn'), timeline:document.getElementById('timeline'), clearAll:document.getElementById('clearAll'), shiftMinutes:document.getElementById('shiftMinutes'), applyShiftDelay:document.getElementById('applyShiftDelay'), smartDelay:document.getElementById('smartDelay'), undoSmartDelay:document.getElementById('undoSmartDelay'), dayEnd:document.getElementById('dayEnd'), insertAfter:document.getElementById('insertAfter'), makeBox:document.getElementById('makeBox'), addSubtask:document.getElementById('addSubtask'),
     noteDate:document.getElementById('noteDate'), noteText:document.getElementById('noteText'), addNote:document.getElementById('addNote'), notesList:document.getElementById('notesList'),
     programSelect:document.getElementById('programSelect'), programDate:document.getElementById('programDate'), programApplyMode:document.getElementById('programApplyMode'), programSummary:document.getElementById('programSummary'), applyProgram:document.getElementById('applyProgram'), saveProgramFromDay:document.getElementById('saveProgramFromDay'), deleteProgram:document.getElementById('deleteProgram'), exportProgram:document.getElementById('exportProgram'), programCsvFile:document.getElementById('programCsvFile'), importProgramCsv:document.getElementById('importProgramCsv'),
     settingsModal:document.getElementById('settingsModal'), uiScale:document.getElementById('uiScale'), uiScaleValue:document.getElementById('uiScaleValue'), appearanceSelect:document.getElementById('appearanceSelect'), defaultDayEnd:document.getElementById('defaultDayEnd'), themeSelect:document.getElementById('themeSelect'), settingsClose:document.getElementById('settingsClose'), resetSettings:document.getElementById('resetSettings'),
@@ -589,10 +599,10 @@
   function makeTaskControls(t){
     const wrap=document.createElement('div');wrap.className='task-toolbar';
 
-    const pLabel=document.createElement('label');pLabel.className='compact-label';pLabel.title='Priority (%)';
-    const pTag=document.createElement('span');pTag.textContent='P';
-    const p=document.createElement('input');p.type='number';p.min='10';p.max='500';p.step='10';p.value=String(t.priority||100);p.className='priority-input';p.setAttribute('aria-label','Priority percent');p.onchange=()=>updateTaskPriority(t.id,p.value);
-    pLabel.append(pTag,p);
+    const wLabel=document.createElement('label');wLabel.className='compact-label';wLabel.title='Weight (0–10)';
+    const wTag=document.createElement('span');wTag.textContent='W';
+    const w=document.createElement('input');w.type='number';w.min='0';w.max='10';w.step='1';w.value=String(t.weight??5);w.className='priority-input';w.setAttribute('aria-label','Weight 0 to 10');w.onchange=()=>updateTaskWeight(t.id,w.value);
+    wLabel.append(wTag,w);
 
     const sel=document.createElement('select');sel.className='status-select';sel.title='Status';sel.setAttribute('aria-label','Task status');
     [['pending','Pending'],['done','Done'],['skipped','Skipped']].forEach(([v,l])=>{const o=document.createElement('option');o.value=v;o.textContent=l;sel.appendChild(o)});
@@ -601,10 +611,15 @@
     if(t.isBox){
       const add=document.createElement('button');add.className='ghost icon-btn';add.textContent='＋';add.title='Add subtask';add.setAttribute('aria-label','Add subtask');add.onclick=()=>openSubtaskModalForBox(t.id,t.start,t.end);wrap.appendChild(add);
     }
-    const pin=document.createElement('button');pin.className='pin icon-btn';pin.textContent=t.pinned?'🔒':'🔓';pin.title=t.pinned?'Unlock task':'Lock task';pin.setAttribute('aria-label',pin.title);pin.onclick=()=>togglePin(t.id);
+    // Cycle lock: none → duration (⏱) → time (🔒) → none
+    const lockBtn=document.createElement('button');lockBtn.className='pin icon-btn';
+    if(t.lockTime){lockBtn.textContent='🔒';lockBtn.title='Time locked (start/end fixed) — click to unlock'}
+    else if(t.lockDuration){lockBtn.textContent='⏱';lockBtn.title='Duration locked — click for time lock'}
+    else{lockBtn.textContent='🔓';lockBtn.title='Unlocked — click to lock duration'}
+    lockBtn.setAttribute('aria-label',lockBtn.title);lockBtn.onclick=()=>cycleTaskLock(t.id);
     const edit=document.createElement('button');edit.className='ghost icon-btn';edit.textContent='⚙️';edit.title='Edit task';edit.setAttribute('aria-label','Edit task');edit.onclick=()=>openEditModal(t.id);
     const del=document.createElement('button');del.className='danger icon-btn';del.textContent='🗑️';del.title='Delete task';del.setAttribute('aria-label','Delete task');del.onclick=()=>deleteTaskWithOptions(t.id);
-    wrap.append(pLabel,sel,pin,edit,del);
+    wrap.append(wLabel,sel,lockBtn,edit,del);
     return wrap;
   }
   function makeRangeChips(t){const segs=getSegments(t);if(segs.length<=1)return null;const w=document.createElement('div');w.className='range-list';segs.forEach(s=>{const c=document.createElement('span');c.className='range-chip';c.textContent=`${fmtTime(s.start)}–${fmtTime(s.end)}`;w.appendChild(c)});return w}
@@ -618,7 +633,7 @@
         const box=document.createElement('div');box.className='box '+statusClass(t.status);box.dataset.id=t.id;
         const header=document.createElement('div');header.className='box-header';
         const left=document.createElement('div');left.style.flex='1';
-        left.innerHTML=`<div style="font-weight:700">${escapeHtml(t.title)} ${t.pinned?'🔒':''}</div><div class="small muted">${escapeHtml(rangeText(t))}</div>${changed?`<div class="tiny changed-time">Original ${fmtDuration(orig)} → Current ${fmtDuration(currentDur)}</div>`:''}`;
+        left.innerHTML=`<div style="font-weight:700">${escapeHtml(t.title)} ${t.lockTime?'🔒':t.lockDuration?'⏱':''}</div><div class="small muted">${escapeHtml(rangeText(t))}</div>${changed?`<div class="tiny changed-time">Original ${fmtDuration(orig)} → Current ${fmtDuration(currentDur)}</div>`:''}`;
         const chips=makeRangeChips(t);if(chips)left.appendChild(chips);left.appendChild(makeTaskControls(t));
         header.appendChild(left);box.appendChild(header);
         tasks.filter(x=>x.parentId===t.id).sort((a,b)=>taskFirstStart(a)-taskFirstStart(b)).forEach(s=>{
@@ -634,7 +649,7 @@
       }else{
         const el=document.createElement('div');el.className='task '+statusClass(t.status);el.dataset.id=t.id;
         const left=document.createElement('div');left.className='meta';
-        left.innerHTML=`<div class="title-row"><div style="font-weight:700">${escapeHtml(t.title)} ${t.pinned?'🔒':''}</div><div class="small muted">${escapeHtml(rangeText(t))}</div></div>${changed?`<div class="tiny changed-time">Original ${fmtDuration(orig)} → Current ${fmtDuration(currentDur)}</div>`:''}`;
+        left.innerHTML=`<div class="title-row"><div style="font-weight:700">${escapeHtml(t.title)} ${t.lockTime?'🔒':t.lockDuration?'⏱':''}</div><div class="small muted">${escapeHtml(rangeText(t))}</div></div>${changed?`<div class="tiny changed-time">Original ${fmtDuration(orig)} → Current ${fmtDuration(currentDur)}</div>`:''}`;
         const chips=makeRangeChips(t);if(chips)left.appendChild(chips);left.appendChild(makeTaskControls(t));el.appendChild(left);els.timeline.appendChild(el);
       }
     });
@@ -644,9 +659,27 @@
   // CRUD/status/priority
   // ----------------------------
   function addTask(){
-    if(!activeProfileId){alert('No active profile');return}const title=els.title.value.trim(),s=parseDT(els.start.value),e=parseDT(els.end.value),priority=clamp(Number(els.newTaskPriority.value)||100,10,500);if(!title){alert('Title required');return}if(!s||!e||e<=s){alert('Start and end must be valid and end after start');return}const tasks=normalizeTasks(loadTasks(activeProfileId)),afterId=els.insertAfter.value;const newTask={id:uid(),title,start:s,end:e,segments:[{start:s,end:e}],pinned:false,isBox:!!els.makeBox.checked,color:els.makeBox.checked?'#60a5fa':null,parentId:null,priority,status:'pending',originalDurationMs:e-s};
-    if(!afterId)tasks.push(newTask);else{const top=tasks.filter(x=>!x.parentId).sort((a,b)=>taskFirstStart(a)-taskFirstStart(b)),i=top.findIndex(x=>x.id===afterId);if(i<0)tasks.push(newTask);else{const prev=top[i],dur=Math.max(15*60000,e-s);newTask.start=taskLastEnd(prev);newTask.end=newTask.start+dur;newTask.segments=[{start:newTask.start,end:newTask.end}];newTask.originalDurationMs=dur;const following=new Set(top.slice(i+1).map(x=>x.id));for(const t of tasks){if(t.pinned)continue;if(following.has(t.id)||(t.parentId&&following.has(t.parentId)))shiftTask(t,dur)}tasks.push(newTask)}}
-    saveTasks(activeProfileId,tasks);els.title.value='';els.start.value='';els.end.value='';els.insertAfter.value='';els.makeBox.checked=false;els.newTaskPriority.value='100';
+    if(!activeProfileId){alert('No active profile');return}
+    const title=els.title.value.trim(),s=parseDT(els.start.value),e=parseDT(els.end.value);
+    const weight=clamp(Number(els.newTaskWeight.value)||5,0,10);
+    if(!title){alert('Title required');return}
+    if(!s||!e||e<=s){alert('Start and end must be valid and end after start');return}
+    const tasks=normalizeTasks(loadTasks(activeProfileId)),afterId=els.insertAfter.value;
+    const newTask={id:uid(),title,start:s,end:e,segments:[{start:s,end:e}],pinned:false,lockTime:false,lockDuration:false,isBox:!!els.makeBox.checked,color:els.makeBox.checked?'#60a5fa':null,parentId:null,weight,priority:Math.max(10,Math.round(weight*50)),status:'pending',originalDurationMs:e-s};
+    if(!afterId)tasks.push(newTask);
+    else{
+      const top=tasks.filter(x=>!x.parentId).sort((a,b)=>taskFirstStart(a)-taskFirstStart(b));
+      const i=top.findIndex(x=>x.id===afterId);
+      if(i<0)tasks.push(newTask);
+      else{
+        const prev=top[i],dur=Math.max(15*60000,e-s);
+        newTask.start=taskLastEnd(prev);newTask.end=newTask.start+dur;newTask.segments=[{start:newTask.start,end:newTask.end}];newTask.originalDurationMs=dur;
+        const following=new Set(top.slice(i+1).map(x=>x.id));
+        for(const t of tasks){if(t.lockTime)continue;if(following.has(t.id)||(t.parentId&&following.has(t.parentId)))shiftTask(t,dur)}
+        tasks.push(newTask);
+      }
+    }
+    saveTasks(activeProfileId,tasks);els.title.value='';els.start.value='';els.end.value='';els.insertAfter.value='';els.makeBox.checked=false;els.newTaskWeight.value='5';
   }
   function deleteTaskWithOptions(id){
     if(!activeProfileId)return;
@@ -674,135 +707,244 @@
   els.deleteTaskCancel.onclick=closeDeleteTaskModal;
   els.deleteTaskModal.addEventListener('click',e=>{if(e.target===els.deleteTaskModal)closeDeleteTaskModal()});
   function deleteAll(){if(!activeProfileId||!confirm('Clear all tasks for this profile?'))return;localStorage.setItem(keyForProfile(activeProfileId),'[]');saveUndoStack(activeProfileId,[]);render();scheduleNotifications()}
-  function openEditModal(id){const tasks=normalizeTasks(loadTasks(activeProfileId)),t=tasks.find(x=>x.id===id);if(!t){alert('Task not found');return}const modal=document.getElementById('editModal'),ms=document.getElementById('modalStart'),me=document.getElementById('modalEnd'),mp=document.getElementById('modalPriority');modal.style.display='flex';ms.value=toInputLocal(t.start);me.value=toInputLocal(t.end);mp.value=t.priority||100;document.getElementById('modalSave').onclick=()=>{const ns=parseDT(ms.value),ne=parseDT(me.value);if(!ns||!ne||ne<=ns){alert('Invalid times');return}t.start=ns;t.end=ne;t.segments=[{start:ns,end:ne}];t.priority=clamp(Number(mp.value)||100,10,500);if(!t.originalDurationMs)t.originalDurationMs=ne-ns;saveTasks(activeProfileId,tasks);modal.style.display='none'};document.getElementById('modalCancel').onclick=()=>modal.style.display='none'}
-  function openSubtaskModalForBox(boxId,defaultStart,defaultEnd){const modal=document.getElementById('subtaskModal');modal.style.display='flex';document.getElementById('subtaskTitle').value='';document.getElementById('subtaskStart').value=toInputLocal(defaultStart||Date.now());document.getElementById('subtaskEnd').value=toInputLocal(defaultEnd||((defaultStart||Date.now())+30*60000));document.getElementById('subtaskSave').onclick=()=>{const title=document.getElementById('subtaskTitle').value.trim(),s=parseDT(document.getElementById('subtaskStart').value),e=parseDT(document.getElementById('subtaskEnd').value);if(!title){alert('Title required');return}if(!s||!e||e<=s){alert('Invalid times');return}const tasks=normalizeTasks(loadTasks(activeProfileId));tasks.push({id:uid(),title,start:s,end:e,segments:[{start:s,end:e}],pinned:false,isBox:false,parentId:boxId,priority:100,status:'pending',originalDurationMs:e-s});saveTasks(activeProfileId,tasks);modal.style.display='none'};document.getElementById('subtaskCancel').onclick=()=>modal.style.display='none'}
-  function togglePin(id){const tasks=normalizeTasks(loadTasks(activeProfileId)),t=tasks.find(x=>x.id===id);if(!t)return;t.pinned=!t.pinned;saveTasks(activeProfileId,tasks)}
-  function updateTaskPriority(id,value){const tasks=normalizeTasks(loadTasks(activeProfileId)),t=tasks.find(x=>x.id===id);if(!t)return;t.priority=clamp(Number(value)||100,10,500);saveTasks(activeProfileId,tasks,{toast:false})}
+  function openEditModal(id){
+    const tasks=normalizeTasks(loadTasks(activeProfileId)),t=tasks.find(x=>x.id===id);
+    if(!t){alert('Task not found');return}
+    const modal=document.getElementById('editModal'),ms=document.getElementById('modalStart'),me=document.getElementById('modalEnd'),mw=document.getElementById('modalWeight');
+    modal.style.display='flex';
+    ms.value=toInputLocal(t.start);me.value=toInputLocal(t.end);mw.value=t.weight??5;
+    document.getElementById('modalSave').onclick=()=>{
+      const ns=parseDT(ms.value),ne=parseDT(me.value);
+      if(!ns||!ne||ne<=ns){alert('Invalid times');return}
+      t.start=ns;t.end=ne;t.segments=[{start:ns,end:ne}];
+      t.weight=clamp(Number(mw.value)||0,0,10);
+      t.priority=Math.max(10,Math.round(t.weight*50));
+      if(!t.originalDurationMs)t.originalDurationMs=ne-ns;
+      saveTasks(activeProfileId,tasks);modal.style.display='none';
+    };
+    document.getElementById('modalCancel').onclick=()=>modal.style.display='none';
+  }
+  function openSubtaskModalForBox(boxId,defaultStart,defaultEnd){const modal=document.getElementById('subtaskModal');modal.style.display='flex';document.getElementById('subtaskTitle').value='';document.getElementById('subtaskStart').value=toInputLocal(defaultStart||Date.now());document.getElementById('subtaskEnd').value=toInputLocal(defaultEnd||((defaultStart||Date.now())+30*60000));document.getElementById('subtaskSave').onclick=()=>{const title=document.getElementById('subtaskTitle').value.trim(),s=parseDT(document.getElementById('subtaskStart').value),e=parseDT(document.getElementById('subtaskEnd').value);if(!title){alert('Title required');return}if(!s||!e||e<=s){alert('Invalid times');return}const tasks=normalizeTasks(loadTasks(activeProfileId));tasks.push({id:uid(),title,start:s,end:e,segments:[{start:s,end:e}],pinned:false,lockTime:false,lockDuration:false,isBox:false,parentId:boxId,weight:5,priority:250,status:'pending',originalDurationMs:e-s});saveTasks(activeProfileId,tasks);modal.style.display='none'};document.getElementById('subtaskCancel').onclick=()=>modal.style.display='none'}
+  function cycleTaskLock(id){
+    const tasks=normalizeTasks(loadTasks(activeProfileId)),t=tasks.find(x=>x.id===id);if(!t)return;
+    // Cycle: none → duration lock → time lock → none
+    if(!t.lockDuration && !t.lockTime){ t.lockDuration=true; t.lockTime=false; }
+    else if(t.lockDuration && !t.lockTime){ t.lockDuration=false; t.lockTime=true; }
+    else { t.lockDuration=false; t.lockTime=false; }
+    t.pinned=!!t.lockTime;
+    saveTasks(activeProfileId,tasks);
+  }
+  function updateTaskWeight(id,value){
+    const tasks=normalizeTasks(loadTasks(activeProfileId)),t=tasks.find(x=>x.id===id);if(!t)return;
+    t.weight=clamp(Number(value)||0,0,10);
+    t.priority=Math.max(10,Math.round(t.weight*50));
+    saveTasks(activeProfileId,tasks,{toast:false});
+  }
   function setTaskStatus(id,status){const tasks=normalizeTasks(loadTasks(activeProfileId)),t=tasks.find(x=>x.id===id);if(!t)return;t.status=['pending','done','skipped'].includes(status)?status:'pending';if(t.isBox)tasks.filter(x=>x.parentId===t.id).forEach(ch=>ch.status=t.status);saveTasks(activeProfileId,tasks,{toast:false})}
 
   // ----------------------------
-  // Normal delay
+  // Delay (simple shift all tasks)
   // ----------------------------
-  function applyNormalDelay(minutes){
-    const m=parseInt(minutes||'0',10);if(isNaN(m)||m<=0){alert('Enter minutes > 0');return}const ms=m*60000,nowMs=now(),tasks=normalizeTasks(loadTasks(activeProfileId)),top=tasks.filter(t=>!t.parentId&&!t.pinned&&t.status==='pending').sort((a,b)=>taskFirstStart(a)-taskFirstStart(b));
-    const running=top.find(t=>taskContainsTime(t,nowMs));
-    if(running){
-      const oldStart=running.start,oldEnd=running.end,segs=getSegments(running);let touched=false;for(let i=0;i<segs.length;i++){if(segs[i].start<=nowMs&&nowMs<segs[i].end){segs[i].end+=ms;for(let j=i+1;j<segs.length;j++){segs[j].start+=ms;segs[j].end+=ms}touched=true;break}}if(touched){setSegments(running,segs);if(running.isBox)remapBoxChildren(tasks,running,oldStart,oldEnd,getSegments(running))}
-    }
-    const cutoff=running?taskLastEnd(running)-ms:nowMs;
-    const upcoming=new Set(top.filter(t=>t.id!==running?.id&&taskFirstStart(t)>=cutoff).map(t=>t.id));
-    for(const t of tasks){if(t.pinned)continue;if(upcoming.has(t.id)||(t.parentId&&upcoming.has(t.parentId)))shiftTask(t,ms)}
-    saveTasks(activeProfileId,tasks);els.delay.value='';showToast(`Normal delay applied: ${m}m`)
-  }
-
-  // ----------------------------
-  // Smart delay
-  // ----------------------------
-  function allocateWeighted(bases,weights,capacity){
-    const totalWeight=weights.reduce((a,b)=>a+Math.max(0.1,b),0);
-    if(capacity<=0)return bases.map(()=>0);
-    return weights.map(w=>capacity*(Math.max(0.1,w)/totalWeight));
-  }
-  function buildSmartDelayPlan(minutes){
-    const delayMin=parseFloat(minutes||'0');
-    if(!isFinite(delayMin)||delayMin<=0)throw new Error('Enter delay minutes > 0');
-    const nowMs=now(),tasks=normalizeTasks(loadTasks(activeProfileId));
-    const flex=tasks.filter(t=>!t.parentId&&!t.pinned&&t.status==='pending').sort((a,b)=>taskFirstStart(a)-taskFirstStart(b));
-    if(!flex.length)throw new Error('No pending flexible tasks found');
-    const virtualNow=nowMs-delayMin*60000;
-    let activeIndex=flex.findIndex(t=>taskFirstStart(t)<=virtualNow&&virtualNow<taskLastEnd(t));
-    if(activeIndex<0)activeIndex=flex.findIndex(t=>taskLastEnd(t)>virtualNow);
-    if(activeIndex<0)activeIndex=0;
-    const candidates=flex.slice(activeIndex);
-    const active=candidates[0];
-    const dayEndMs=resolveDayEnd(taskFirstStart(active),els.dayEnd.value||loadSettings().defaultDayEnd||DEFAULT_DAY_END);
-    if(!dayEndMs||dayEndMs<=nowMs)throw new Error('Invalid Day ends at time');
-
-    const locks=tasks.filter(t=>!t.parentId&&t.pinned&&t.status!=='skipped').flatMap(t=>getSegments(t)).filter(s=>s.end>nowMs&&s.start<dayEndMs);
-    const freeIntervals=buildFreeIntervals(nowMs,dayEndMs,locks);
-    const freeFuture=totalIntervalDuration(freeIntervals);
-    const completedActive=Math.min(taskDuration(active),taskPlannedElapsedUntil(active,virtualNow));
-
-    // Smart Rebalance: do NOT use original durations as a ceiling.
-    // The entire remaining available time is redistributed by priority.
-    const weights=candidates.map(t=>(Number(t.priority)||100)/100);
-    const capacityTotal=freeFuture+completedActive;
-    const targetTotals=allocateWeighted(candidates.map(()=>0),weights,capacityTotal);
-    const remaining=targetTotals.map((x,i)=>Math.max(0,x-(i===0?completedActive:0)));
-
-    const state={idx:0,cursor:freeIntervals[0]?.start||nowMs};
-    const newSegmentsById={};
-    let overflow=0;
-    remaining.forEach((dur,i)=>{
-      const a=allocateAcrossFreeIntervals(dur,freeIntervals,state);
-      newSegmentsById[candidates[i].id]=a.segments;
-      overflow+=a.unallocated;
-    });
-
-    return {
-      createdAt:Date.now(),delayMin,nowMs,dayEndMs,completedActive,freeFuture,
-      locks:mergedIntervals(locks),freeIntervals,
-      candidateIds:candidates.map(t=>t.id),
-      targetTotals,remaining,newSegmentsById,overflow,
-      tasksSnapshot:deepClone(tasks),
-      rows:candidates.map((t,i)=>({
-        id:t.id,title:t.title,priority:t.priority||100,
-        before:taskDuration(t),target:targetTotals[i],
-        completed:i===0?completedActive:0,after:remaining[i]
-      }))
-    };
-  }
-  function showSmartPreview(plan){
-    pendingSmartPlan=plan;els.smartPreviewStats.innerHTML='';const stats=[['Delay',plan.delayMin+'m'],['Day ends at',fmtTime(plan.dayEndMs)],['Free time from now',fmtDuration(plan.freeFuture)],['Locked time remaining',fmtDuration(plan.locks.reduce((a,x)=>a+x.end-x.start,0))],['Estimated completed in current task',fmtDuration(plan.completedActive)]];for(const [a,b] of stats){const l=document.createElement('div');l.textContent=a;const r=document.createElement('div');r.style.fontWeight='700';r.textContent=b;els.smartPreviewStats.append(l,r)}
-    els.smartPreviewList.innerHTML='';plan.rows.forEach((r,i)=>{const d=document.createElement('div');d.className='preview-row';const left=document.createElement('div');left.innerHTML=`<strong>${escapeHtml(r.title)}</strong><div class="tiny">Priority ${r.priority}%${i===0&&r.completed>0?` • estimated completed ${fmtDuration(r.completed)}`:''}</div>`;const right=document.createElement('div');right.className='right';right.innerHTML=`<div>${fmtDuration(r.before)} → <strong>${fmtDuration(r.target)}</strong></div><div class="tiny">future: ${fmtDuration(r.after)}</div>`;d.append(left,right);els.smartPreviewList.appendChild(d)});
-    if(plan.overflow>1000){els.smartPreviewWarning.style.display='block';els.smartPreviewWarning.textContent='Some time could not be scheduled because locked periods leave too little free space.'}else els.smartPreviewWarning.style.display='none';
-    els.smartPreviewModal.style.display='flex';
-  }
-  function applySmartPlan(plan){
-    if(!plan)return;let tasks=normalizeTasks(loadTasks(activeProfileId));const stack=loadUndoStack(activeProfileId);stack.push({createdAt:Date.now(),tasks:deepClone(tasks)});saveUndoStack(activeProfileId,stack);
-    for(const row of plan.rows){const t=tasks.find(x=>x.id===row.id);if(!t)continue;const oldStart=t.start,oldEnd=t.end,newSegs=plan.newSegmentsById[t.id]||[];if(newSegs.length){setSegments(t,newSegs);t.status='pending';t.lastSmartTargetDurationMs=Math.round(row.target);if(t.isBox)remapBoxChildren(tasks,t,oldStart,oldEnd,newSegs)}else{t.status='done';t.segments=[];t.start=t.end=plan.nowMs;if(t.isBox)tasks.filter(x=>x.parentId===t.id).forEach(ch=>{ch.status='done';ch.segments=[];ch.start=ch.end=plan.nowMs})}}
-    saveTasks(activeProfileId,tasks,{toast:false});els.smartPreviewModal.style.display='none';pendingSmartPlan=null;els.delay.value='';showToast(`Smart delay applied: ${plan.delayMin}m`)
-  }
-  function undoSmartDelay(){const stack=loadUndoStack(activeProfileId);if(!stack.length){showToast('Nothing to undo');return}const snap=stack.pop();saveUndoStack(activeProfileId,stack);saveTasks(activeProfileId,snap.tasks,{toast:false});showToast('Smart delay undone')}
-  function updateUndoButton(){if(!els.undoSmartDelay)return;els.undoSmartDelay.disabled=!activeProfileId||loadUndoStack(activeProfileId).length===0}
-  function calculateSmartDelayFromRemainingTime(){
-    const rest=Math.max(0,Number(els.delay.value)||0)*60000;
-    const nowMs=now();
-    const dayEnd=resolveDayEnd(nowMs,els.dayEnd.value||loadSettings().defaultDayEnd||DEFAULT_DAY_END);
-    if(!dayEnd || dayEnd<=nowMs) throw new Error('Invalid day end');
-    const available=Math.max(0,dayEnd-nowMs-rest);
-    const tasks=normalizeTasks(loadTasks(activeProfileId)).filter(t=>!t.parentId&&t.status==='pending'&&!t.pinned);
-    const remaining=tasks.reduce((a,t)=>a+taskDuration(t),0);
-    const lost=Math.max(0,remaining-available);
-    return Math.ceil(lost/60000);
-  }
-  function applyNormalDelay(){
-    const m=Math.max(0,Number(els.normalDelay.value)||0);
-    if(!m){alert('Enter delay minutes');return}
+  function applyShiftDelay(){
+    const m=Math.max(0,Number(els.shiftMinutes.value)||0);
+    if(!m){alert('Enter minutes > 0');return}
     const ms=m*60000;
-    const nowMs=now();
     const tasks=normalizeTasks(loadTasks(activeProfileId));
     for(const t of tasks){
-      if(t.pinned || t.status==='done') continue;
-      // keep locked tasks fixed
-      if(t.locked) continue;
-      if(t.end>nowMs){
-        t.start+=ms;
-        t.end+=ms;
-        if(t.segments) t.segments=t.segments.map(seg=>({start:seg.start+ms,end:seg.end+ms}));
-      }
+      // Shift every task (including locked) by the requested amount
+      shiftTask(t,ms);
     }
     saveTasks(activeProfileId,tasks);
-    els.normalDelay.value='';
-    showToast('Normal delay applied');
+    els.shiftMinutes.value='';
+    showToast(`All tasks shifted by ${m} minutes`);
   }
-  els.applyNormalDelay.onclick=applyNormalDelay;
 
-  els.smartDelay.onclick=()=>{try{
-    const autoDelay=calculateSmartDelayFromRemainingTime();
-    if(autoDelay<=0){showToast('No delay needed');return}
-    showSmartPreview(buildSmartDelayPlan(autoDelay));
-  }catch(e){alert(e.message||'Could not calculate Smart Delay')}};
+  // ----------------------------
+  // Smart delay (weight-based redistribution)
+  // ----------------------------
+  function buildSmartDelayPlan(){
+    const nowMs=now();
+    const tasks=normalizeTasks(loadTasks(activeProfileId));
+    // All pending top-level tasks in current order
+    const top=tasks.filter(t=>!t.parentId && t.status==='pending')
+                   .sort((a,b)=>taskFirstStart(a)-taskFirstStart(b));
+    if(!top.length) throw new Error('No pending tasks found');
+
+    const dayEndMs=resolveDayEnd(nowMs, els.dayEnd.value||loadSettings().defaultDayEnd||DEFAULT_DAY_END);
+    if(!dayEndMs || dayEndMs<=nowMs) throw new Error('Invalid “Day ends at” (must be after now)');
+
+    // Time-locked tasks = fixed obstacles
+    const timeLockIntervals=[];
+    for(const t of top){
+      if(t.lockTime){
+        for(const s of getSegments(t)){
+          if(s.end>nowMs && s.start<dayEndMs) timeLockIntervals.push({start:s.start,end:s.end});
+        }
+      }
+    }
+    const freeIntervals=buildFreeIntervals(nowMs, dayEndMs, timeLockIntervals);
+    let freeMs=totalIntervalDuration(freeIntervals);
+
+    // Duration-locked tasks keep their current duration (reserved from free pool)
+    let reservedMs=0;
+    const durationLockedIds=new Set();
+    for(const t of top){
+      if(!t.lockTime && t.lockDuration){
+        const dur=taskDuration(t);
+        reservedMs+=dur;
+        durationLockedIds.add(t.id);
+      }
+    }
+
+    const distributable=Math.max(0, freeMs - reservedMs);
+
+    // Flexible tasks get time proportional to weight
+    const flexible=top.filter(t=>!t.lockTime && !t.lockDuration);
+    const totalWeight=flexible.reduce((a,t)=>a+Math.max(0,Number(t.weight)||0),0);
+
+    const targetMsById={};
+    // Duration-locked: keep current duration
+    for(const t of top){
+      if(durationLockedIds.has(t.id)) targetMsById[t.id]=taskDuration(t);
+    }
+    // Flexible: proportional
+    if(totalWeight<=0){
+      // equal split if all weights are 0
+      const each=flexible.length?Math.floor(distributable/flexible.length):0;
+      flexible.forEach((t,i)=>{
+        targetMsById[t.id]= each + (i===0 ? (distributable - each*flexible.length) : 0);
+      });
+    }else{
+      let assigned=0;
+      flexible.forEach((t,i)=>{
+        const w=Math.max(0,Number(t.weight)||0);
+        let share=Math.round(distributable * (w/totalWeight));
+        if(i===flexible.length-1) share=Math.max(0, distributable-assigned); // last gets remainder
+        targetMsById[t.id]=share;
+        assigned+=share;
+      });
+    }
+    // Time-locked keep original segments (not in targetMsById for reallocation)
+
+    // Place flexible + duration-locked into free intervals (order preserved)
+    // Time-locked stay put.
+    const state={idx:0, cursor: freeIntervals[0]?.start ?? nowMs};
+    const newSegmentsById={};
+    let overflow=0;
+    const rows=[];
+
+    for(const t of top){
+      if(t.lockTime){
+        // Keep original segments that overlap the window
+        const segs=getSegments(t).map(s=>({start:s.start,end:s.end}));
+        newSegmentsById[t.id]=segs;
+        rows.push({
+          id:t.id, title:t.title, weight:t.weight??0, lock:'time',
+          before:taskDuration(t), target:taskDuration(t), after:taskDuration(t)
+        });
+        continue;
+      }
+      const target=Math.max(0, Math.round(targetMsById[t.id]||0));
+      const a=allocateAcrossFreeIntervals(target, freeIntervals, state);
+      newSegmentsById[t.id]=a.segments;
+      overflow+=a.unallocated;
+      rows.push({
+        id:t.id, title:t.title, weight:t.weight??0,
+        lock: t.lockDuration ? 'duration' : 'none',
+        before:taskDuration(t), target, after: totalIntervalDuration(a.segments)
+      });
+    }
+
+    return {
+      createdAt:Date.now(), nowMs, dayEndMs,
+      freeFuture:freeMs, reservedMs, distributable,
+      locks:mergedIntervals(timeLockIntervals), freeIntervals,
+      newSegmentsById, overflow, rows
+    };
+  }
+
+  function showSmartPreview(plan){
+    pendingSmartPlan=plan;
+    els.smartPreviewStats.innerHTML='';
+    const stats=[
+      ['Now', fmtTime(plan.nowMs)],
+      ['Day ends at', fmtTime(plan.dayEndMs)],
+      ['Free time', fmtDuration(plan.freeFuture)],
+      ['Reserved (duration locks)', fmtDuration(plan.reservedMs)],
+      ['Distributable', fmtDuration(plan.distributable)]
+    ];
+    for(const [a,b] of stats){
+      const l=document.createElement('div');l.textContent=a;
+      const r=document.createElement('div');r.style.fontWeight='700';r.textContent=b;
+      els.smartPreviewStats.append(l,r);
+    }
+    els.smartPreviewList.innerHTML='';
+    plan.rows.forEach(r=>{
+      const d=document.createElement('div');d.className='preview-row';
+      const lockLabel=r.lock==='time'?'🔒 time lock':r.lock==='duration'?'⏱ duration lock':'';
+      const left=document.createElement('div');
+      left.innerHTML=`<strong>${escapeHtml(r.title)}</strong><div class="tiny">Weight ${r.weight}${lockLabel?' · '+lockLabel:''}</div>`;
+      const right=document.createElement('div');right.className='right';
+      right.innerHTML=`<div>${fmtDuration(r.before)} → <strong>${fmtDuration(r.target)}</strong></div><div class="tiny">scheduled: ${fmtDuration(r.after)}</div>`;
+      d.append(left,right);els.smartPreviewList.appendChild(d);
+    });
+    if(plan.overflow>1000){
+      els.smartPreviewWarning.style.display='block';
+      els.smartPreviewWarning.textContent='Some time could not be scheduled because locked periods leave too little free space.';
+    }else els.smartPreviewWarning.style.display='none';
+    els.smartPreviewModal.style.display='flex';
+  }
+
+  function applySmartPlan(plan){
+    if(!plan)return;
+    let tasks=normalizeTasks(loadTasks(activeProfileId));
+    const stack=loadUndoStack(activeProfileId);
+    stack.push({createdAt:Date.now(), tasks:deepClone(tasks)});
+    saveUndoStack(activeProfileId,stack);
+
+    for(const row of plan.rows){
+      const t=tasks.find(x=>x.id===row.id);if(!t)continue;
+      // Time-locked tasks are left untouched
+      if(t.lockTime) continue;
+      const oldStart=t.start, oldEnd=t.end;
+      const newSegs=plan.newSegmentsById[t.id]||[];
+      if(newSegs.length){
+        setSegments(t,newSegs);
+        t.status='pending';
+        t.lastSmartTargetDurationMs=Math.round(row.target);
+        if(t.isBox) remapBoxChildren(tasks,t,oldStart,oldEnd,newSegs);
+      }else{
+        // Zero allocation → mark done
+        t.status='done'; t.segments=[]; t.start=t.end=plan.nowMs;
+        if(t.isBox) tasks.filter(x=>x.parentId===t.id).forEach(ch=>{ch.status='done';ch.segments=[];ch.start=ch.end=plan.nowMs});
+      }
+    }
+    saveTasks(activeProfileId,tasks,{toast:false});
+    els.smartPreviewModal.style.display='none';
+    pendingSmartPlan=null;
+    showToast('Smart Delay applied');
+  }
+
+  function undoSmartDelay(){
+    const stack=loadUndoStack(activeProfileId);
+    if(!stack.length){showToast('Nothing to undo');return}
+    const snap=stack.pop();
+    saveUndoStack(activeProfileId,stack);
+    saveTasks(activeProfileId,snap.tasks,{toast:false});
+    showToast('Smart delay undone');
+  }
+  function updateUndoButton(){
+    if(!els.undoSmartDelay)return;
+    els.undoSmartDelay.disabled=!activeProfileId||loadUndoStack(activeProfileId).length===0;
+  }
+
+  // Event wiring for delay controls
+  if(els.applyShiftDelay) els.applyShiftDelay.onclick=applyShiftDelay;
+  els.smartDelay.onclick=()=>{
+    try{
+      showSmartPreview(buildSmartDelayPlan());
+    }catch(e){alert(e.message||'Could not calculate Smart Delay')}
+  };
   els.smartPreviewCancel.onclick=()=>{els.smartPreviewModal.style.display='none';pendingSmartPlan=null};
   els.smartPreviewApply.onclick=()=>applySmartPlan(pendingSmartPlan);
   els.undoSmartDelay.onclick=undoSmartDelay;
@@ -820,11 +962,11 @@
   // Ready Programs / CSV
   // ----------------------------
   function saveCurrentDayAsProgram(){
-    if(!activeProfileId)return;const day=els.programDate.value;if(!day){alert('Choose a day first');return}const tasks=normalizeTasks(loadTasks(activeProfileId)),top=tasks.filter(t=>!t.parentId&&dateKey(taskFirstStart(t))===day).sort((a,b)=>taskFirstStart(a)-taskFirstStart(b));if(!top.length){alert('No main tasks start on that day');return}const raw=prompt('Program name','Study Day');if(!raw)return;const name=raw.trim(),topIds=new Set(top.map(t=>t.id)),selected=tasks.filter(t=>topIds.has(t.id)||(t.parentId&&topIds.has(t.parentId))),map=new Map();top.forEach(t=>map.set(t.id,uid()));selected.filter(t=>t.parentId).forEach(t=>map.set(t.id,uid()));const parts=selected.map(t=>({templateId:map.get(t.id),parentTemplateId:t.parentId?map.get(t.parentId):null,title:t.title,startOffsetMin:minutesFromDayStart(t.start,day),endOffsetMin:minutesFromDayStart(t.end,day),isBox:!!t.isBox,pinned:!!t.pinned,priority:Number(t.priority)||100})).sort((a,b)=>a.startOffsetMin-b.startOffsetMin);const programs=loadPrograms(activeProfileId),same=programs.find(p=>p.name.toLowerCase()===name.toLowerCase());if(same){if(!confirm(`A program named “${name}” already exists. Replace it?`))return;same.parts=parts;same.updatedAt=Date.now();savePrograms(activeProfileId,programs,true);els.programSelect.value=same.id}else{const p={id:uid(),name,createdAt:Date.now(),parts};programs.push(p);savePrograms(activeProfileId,programs,true);els.programSelect.value=p.id}updateProgramSummary();showToast('Day saved as reusable program')
+    if(!activeProfileId)return;const day=els.programDate.value;if(!day){alert('Choose a day first');return}const tasks=normalizeTasks(loadTasks(activeProfileId)),top=tasks.filter(t=>!t.parentId&&dateKey(taskFirstStart(t))===day).sort((a,b)=>taskFirstStart(a)-taskFirstStart(b));if(!top.length){alert('No main tasks start on that day');return}const raw=prompt('Program name','Study Day');if(!raw)return;const name=raw.trim(),topIds=new Set(top.map(t=>t.id)),selected=tasks.filter(t=>topIds.has(t.id)||(t.parentId&&topIds.has(t.parentId))),map=new Map();top.forEach(t=>map.set(t.id,uid()));selected.filter(t=>t.parentId).forEach(t=>map.set(t.id,uid()));const parts=selected.map(t=>({templateId:map.get(t.id),parentTemplateId:t.parentId?map.get(t.parentId):null,title:t.title,startOffsetMin:minutesFromDayStart(t.start,day),endOffsetMin:minutesFromDayStart(t.end,day),isBox:!!t.isBox,pinned:!!t.pinned,lockTime:!!t.lockTime,lockDuration:!!t.lockDuration,weight:Number(t.weight)||5,priority:Number(t.priority)||100})).sort((a,b)=>a.startOffsetMin-b.startOffsetMin);const programs=loadPrograms(activeProfileId),same=programs.find(p=>p.name.toLowerCase()===name.toLowerCase());if(same){if(!confirm(`A program named “${name}” already exists. Replace it?`))return;same.parts=parts;same.updatedAt=Date.now();savePrograms(activeProfileId,programs,true);els.programSelect.value=same.id}else{const p={id:uid(),name,createdAt:Date.now(),parts};programs.push(p);savePrograms(activeProfileId,programs,true);els.programSelect.value=p.id}updateProgramSummary();showToast('Day saved as reusable program')
   }
   function collectTargetDayIds(tasks,day){const topIds=new Set(tasks.filter(t=>!t.parentId&&dateKey(taskFirstStart(t))===day).map(t=>t.id)),all=new Set(topIds);tasks.forEach(t=>{if(t.parentId&&topIds.has(t.parentId))all.add(t.id)});return all}
   function applySelectedProgram(){
-    if(!activeProfileId)return;const program=loadPrograms(activeProfileId).find(p=>p.id===els.programSelect.value);if(!program){alert('Choose a saved program');return}const day=els.programDate.value;if(!day){alert('Choose the target day');return}const base=localMidnightMs(day);if(base===null){alert('Invalid target day');return}let tasks=normalizeTasks(loadTasks(activeProfileId));if(els.programApplyMode.value==='replace'){const ids=collectTargetDayIds(tasks,day);if(ids.size&& !confirm('This day already has tasks. Replace those tasks with the selected program?'))return;tasks=tasks.filter(t=>!ids.has(t.id))}const idMap=new Map();program.parts.forEach(p=>idMap.set(p.templateId,uid()));const created=program.parts.map(p=>{const s=base+p.startOffsetMin*60000,e=base+p.endOffsetMin*60000;return{id:idMap.get(p.templateId),title:p.title,start:s,end:e,segments:[{start:s,end:e}],pinned:!!p.pinned,isBox:!!p.isBox,color:p.isBox?'#60a5fa':null,parentId:p.parentTemplateId?idMap.get(p.parentTemplateId):null,priority:Number(p.priority)||100,status:'pending',originalDurationMs:e-s}});tasks.push(...created);saveTasks(activeProfileId,tasks);showToast(`Applied “${program.name}” to ${day}`)
+    if(!activeProfileId)return;const program=loadPrograms(activeProfileId).find(p=>p.id===els.programSelect.value);if(!program){alert('Choose a saved program');return}const day=els.programDate.value;if(!day){alert('Choose the target day');return}const base=localMidnightMs(day);if(base===null){alert('Invalid target day');return}let tasks=normalizeTasks(loadTasks(activeProfileId));if(els.programApplyMode.value==='replace'){const ids=collectTargetDayIds(tasks,day);if(ids.size&& !confirm('This day already has tasks. Replace those tasks with the selected program?'))return;tasks=tasks.filter(t=>!ids.has(t.id))}const idMap=new Map();program.parts.forEach(p=>idMap.set(p.templateId,uid()));const created=program.parts.map(p=>{const s=base+p.startOffsetMin*60000,e=base+p.endOffsetMin*60000;const w=Number.isFinite(Number(p.weight))?Number(p.weight):(Number.isFinite(Number(p.priority))?clamp(Math.round(Number(p.priority)/50),0,10):5);return{id:idMap.get(p.templateId),title:p.title,start:s,end:e,segments:[{start:s,end:e}],pinned:!!p.pinned,lockTime:!!(p.lockTime||p.pinned),lockDuration:!!p.lockDuration,isBox:!!p.isBox,color:p.isBox?'#60a5fa':null,parentId:p.parentTemplateId?idMap.get(p.parentTemplateId):null,weight:clamp(w,0,10),priority:Math.max(10,Math.round(clamp(w,0,10)*50)),status:'pending',originalDurationMs:e-s}});tasks.push(...created);saveTasks(activeProfileId,tasks);showToast(`Applied “${program.name}” to ${day}`)
   }
   function deleteSelectedProgram(){const id=els.programSelect.value;if(!id){alert('Choose a program');return}const ps=loadPrograms(activeProfileId),p=ps.find(x=>x.id===id);if(!p)return;if(!confirm(`Delete ready program “${p.name}”?`))return;savePrograms(activeProfileId,ps.filter(x=>x.id!==id))}
   function csvEscape(v){const s=String(v??'');return/[",\n\r]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s}
@@ -852,7 +994,7 @@
     saveTasks:(tasks)=>saveTasks(activeProfileId,tasks),
     loadPrograms:()=>loadPrograms(activeProfileId),
     buildSmartDelayPlan,
-    applyNormalDelay,
+    applyShiftDelay,
     scheduleNotifications,
     DEFAULT_DAY_END
   };
