@@ -53,8 +53,9 @@
     min-height:100dvh;
     zoom:var(--ui-scale);
   }
-  header{display:flex;align-items:center;justify-content:space-between;gap:12px}
-  h1{margin:0 0 6px;font-size:20px}
+  header{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;padding:8px 0 4px}
+  h1{margin:0;font-size:22px;font-weight:700;letter-spacing:-0.02em}
+  #headerSubtitle{margin:0}
   h2{font-size:18px}
   .row{display:flex;gap:8px;align-items:center}
   input,button,textarea,select{
@@ -137,14 +138,37 @@
   .preview-warning{padding:8px 10px;border-left:4px solid var(--warning);background:rgba(217,119,6,.10);border-radius:7px;margin-top:10px}
   hr{border:none;border-top:1px solid var(--border);margin:16px 0}
 
-  /* Menu & panels */
-  .header-actions{display:flex;align-items:center;gap:8px}
-  .menu-btn{width:42px;min-width:42px;height:42px;padding:0;border-radius:10px;font-size:20px;line-height:1;background:var(--surface);color:var(--text);border:1px solid var(--border)}
-  .menu-dropdown{position:absolute;top:52px;right:0;z-index:2000;background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);padding:6px;min-width:220px;display:none}
+  /* Floating menu button (FAB style) */
+  .fab-wrap{
+    position:fixed;
+    top:max(14px, env(safe-area-inset-top));
+    right:max(14px, env(safe-area-inset-right));
+    z-index:2500;
+  }
+  .menu-btn{
+    width:48px;min-width:48px;height:48px;min-height:48px!important;padding:0;
+    border-radius:50%;
+    font-size:22px;line-height:1;letter-spacing:1px;
+    background:var(--surface-2);
+    color:var(--text);
+    border:1px solid var(--border);
+    box-shadow:0 4px 14px rgba(0,0,0,.18);
+    display:inline-flex;align-items:center;justify-content:center;
+  }
+  html[data-mode="dark"] .menu-btn{
+    background:#2a303a;
+    border-color:#3a4250;
+    box-shadow:0 4px 16px rgba(0,0,0,.45);
+  }
+  .menu-btn:active{transform:scale(.96)}
+  .menu-dropdown{
+    position:absolute;top:56px;right:0;z-index:2501;
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;
+    box-shadow:var(--shadow);padding:6px;min-width:220px;display:none
+  }
   .menu-dropdown.open{display:flex;flex-direction:column;gap:2px}
   .menu-dropdown button{width:100%;text-align:left;background:transparent;color:var(--text);border:none;border-radius:8px;padding:10px 12px;min-height:40px}
   .menu-dropdown button:hover{background:var(--surface-2)}
-  .header-wrap{position:relative}
   .panel-modal .modal{width:min(560px,100%);max-height:88dvh}
   .panel-modal .modal h2{margin:0 0 10px;font-size:17px}
   .color-palette{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
@@ -155,7 +179,7 @@
 
   @media (max-width:700px){
     body{margin:0;padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) calc(22px + env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));border-radius:0;box-shadow:none}
-    header{flex-direction:column;align-items:stretch}
+    header{flex-direction:column;align-items:center;text-align:center}
     h1{font-size:19px}
     .profile-select{display:grid;grid-template-columns:1fr 1fr;gap:8px;justify-content:stretch}
     .profile-select label,.profile-select #profileSelect{grid-column:1/-1}
@@ -198,22 +222,22 @@
 </head>
 <body>
 <header>
-  <div>
-    <h1>Timeline Scheduler</h1>
-    <div class="muted" id="headerSubtitle">لیست تسک‌های امروز</div>
-  </div>
-  <div class="header-wrap header-actions">
-    <button id="menuBtn" class="menu-btn" title="منو" aria-label="منو">⋯</button>
-    <div id="mainMenu" class="menu-dropdown" role="menu">
-      <button type="button" data-panel="profilePanel">👤 پروفایل</button>
-      <button type="button" data-panel="addTaskPanel">＋ افزودن تسک</button>
-      <button type="button" data-panel="todoPanel">📝 TO-DO</button>
-      <button type="button" data-panel="programsPanelModal">📦 برنامه‌های آماده</button>
-      <button type="button" data-panel="delayPanel">⏱ Delay Control</button>
-      <button type="button" id="settingsBtn">⚙ تنظیمات ظاهر</button>
-    </div>
-  </div>
+  <h1>Timeline Scheduler</h1>
+  <div class="muted" id="headerSubtitle">لیست تسک‌های امروز</div>
 </header>
+
+<!-- Floating free menu button (top-right) -->
+<div class="fab-wrap" id="fabWrap">
+  <button id="menuBtn" class="menu-btn" title="منو" aria-label="منو">⋯</button>
+  <div id="mainMenu" class="menu-dropdown" role="menu">
+    <button type="button" data-panel="profilePanel">👤 پروفایل</button>
+    <button type="button" data-panel="addTaskPanel">＋ افزودن تسک</button>
+    <button type="button" data-panel="todoPanel">📝 TO-DO</button>
+    <button type="button" data-panel="programsPanelModal">📦 برنامه‌های آماده</button>
+    <button type="button" data-panel="delayPanel">⏱ Delay Control</button>
+    <button type="button" id="settingsBtn">⚙ تنظیمات ظاهر</button>
+  </div>
+</div>
 
 <hr />
 
@@ -640,9 +664,13 @@
   (function wireMenu(){
     const btn=document.getElementById('menuBtn');
     const menu=document.getElementById('mainMenu');
+    const wrap=document.getElementById('fabWrap');
     if(btn&&menu){
       btn.onclick=(e)=>{ e.stopPropagation(); menu.classList.toggle('open'); };
-      document.addEventListener('click',(e)=>{ if(!menu.contains(e.target)&&e.target!==btn) closeMainMenu(); });
+      document.addEventListener('click',(e)=>{
+        if(wrap && wrap.contains(e.target)) return;
+        closeMainMenu();
+      });
       menu.querySelectorAll('[data-panel]').forEach(b=>{
         b.onclick=()=>openPanel(b.dataset.panel);
       });
