@@ -273,9 +273,12 @@
     <button id="applyShiftDelay" class="ghost">Delay</button>
     <button id="smartDelay">Smart Delay</button>
   </div>
-  <div class="row" style="margin-top:8px;justify-content:space-between;flex-wrap:wrap">
+  <div class="row" style="margin-top:8px;justify-content:space-between;flex-wrap:wrap;gap:8px">
     <div class="small muted">⏱ = duration locked · 🔒 = time locked · Smart Delay redistributes free time by weight (0–10).</div>
-    <button id="undoSmartDelay" class="ghost" disabled>Undo Smart Delay</button>
+    <div class="row" style="gap:6px;flex-wrap:wrap">
+      <button id="enableNotifications" class="ghost" title="Enable start/end notifications">🔔 نوتیفیکیشن</button>
+      <button id="undoSmartDelay" class="ghost" disabled>Undo Smart Delay</button>
+    </div>
   </div>
 </section>
 
@@ -452,7 +455,7 @@
 
   const els={
     profileSelect:document.getElementById('profileSelect'), addProfile:document.getElementById('addProfile'), renameProfile:document.getElementById('renameProfile'), deleteProfile:document.getElementById('deleteProfile'), settingsBtn:document.getElementById('settingsBtn'),
-    title:document.getElementById('title'), start:document.getElementById('start'), end:document.getElementById('end'), newTaskWeight:document.getElementById('newTaskWeight'), addBtn:document.getElementById('addBtn'), timeline:document.getElementById('timeline'), clearAll:document.getElementById('clearAll'), shiftMinutes:document.getElementById('shiftMinutes'), applyShiftDelay:document.getElementById('applyShiftDelay'), smartDelay:document.getElementById('smartDelay'), undoSmartDelay:document.getElementById('undoSmartDelay'), dayEnd:document.getElementById('dayEnd'), insertAfter:document.getElementById('insertAfter'), makeBox:document.getElementById('makeBox'), addSubtask:document.getElementById('addSubtask'),
+    title:document.getElementById('title'), start:document.getElementById('start'), end:document.getElementById('end'), newTaskWeight:document.getElementById('newTaskWeight'), addBtn:document.getElementById('addBtn'), timeline:document.getElementById('timeline'), clearAll:document.getElementById('clearAll'), shiftMinutes:document.getElementById('shiftMinutes'), applyShiftDelay:document.getElementById('applyShiftDelay'), smartDelay:document.getElementById('smartDelay'), undoSmartDelay:document.getElementById('undoSmartDelay'), enableNotifications:document.getElementById('enableNotifications'), dayEnd:document.getElementById('dayEnd'), insertAfter:document.getElementById('insertAfter'), makeBox:document.getElementById('makeBox'), addSubtask:document.getElementById('addSubtask'),
     noteDate:document.getElementById('noteDate'), noteText:document.getElementById('noteText'), addNote:document.getElementById('addNote'), notesList:document.getElementById('notesList'),
     programSelect:document.getElementById('programSelect'), programDate:document.getElementById('programDate'), programApplyMode:document.getElementById('programApplyMode'), programSummary:document.getElementById('programSummary'), applyProgram:document.getElementById('applyProgram'), saveProgramFromDay:document.getElementById('saveProgramFromDay'), deleteProgram:document.getElementById('deleteProgram'), exportProgram:document.getElementById('exportProgram'), programCsvFile:document.getElementById('programCsvFile'), importProgramCsv:document.getElementById('importProgramCsv'),
     settingsModal:document.getElementById('settingsModal'), uiScale:document.getElementById('uiScale'), uiScaleValue:document.getElementById('uiScaleValue'), appearanceSelect:document.getElementById('appearanceSelect'), defaultDayEnd:document.getElementById('defaultDayEnd'), themeSelect:document.getElementById('themeSelect'), settingsClose:document.getElementById('settingsClose'), resetSettings:document.getElementById('resetSettings'),
@@ -948,15 +951,94 @@
   els.smartPreviewCancel.onclick=()=>{els.smartPreviewModal.style.display='none';pendingSmartPlan=null};
   els.smartPreviewApply.onclick=()=>applySmartPlan(pendingSmartPlan);
   els.undoSmartDelay.onclick=undoSmartDelay;
+  if(els.enableNotifications) els.enableNotifications.onclick=requestNotificationsAndReschedule;
 
   // ----------------------------
   // Notes & notifications
   // ----------------------------
   els.addNote.onclick=()=>{const date=els.noteDate.value,text=els.noteText.value.trim();if(!date||!text){alert('Pick date and write a note');return}const notes=loadNotes(activeProfileId);notes.push({id:uid(),date,text,done:false});saveNotes(activeProfileId,notes);els.noteText.value=''};
-  function ensureNotificationPermission(){if(!('Notification'in window))return;if(Notification.permission==='default')Notification.requestPermission().catch(()=>{})}
-  function clearScheduled(){scheduledTimers.forEach(i=>clearTimeout(i));scheduledTimers=[]}
-  function scheduleNotifications(){clearScheduled();if(!activeProfileId)return;ensureNotificationPermission();const tasks=normalizeTasks(loadTasks(activeProfileId)),nowMs=now(),MAX=2147483000;tasks.forEach(t=>{if(t.parentId||t.pinned||t.status!=='pending')return;getSegments(t).forEach((s,idx)=>{if(s.start>nowMs){const d=s.start-nowMs;if(d<=MAX)scheduledTimers.push(setTimeout(()=>notify(`Task starting: ${t.title}${getSegments(t).length>1?' (part '+(idx+1)+')':''}`,'Start time reached'),d))}if(s.end>nowMs){const d=s.end-nowMs;if(d<=MAX)scheduledTimers.push(setTimeout(()=>notify(`Task ended: ${t.title}`,'End time reached'),d))}})})}
-  function notify(title,body){if('Notification'in window&&Notification.permission==='granted')new Notification(title,{body});else{showToast(title);try{if(navigator.vibrate)navigator.vibrate([200,100,200])}catch(e){}}}
+
+  function ensureNotificationPermission(){
+    if(!('Notification' in window)) return Promise.resolve('unsupported');
+    if(Notification.permission==='granted') return Promise.resolve('granted');
+    if(Notification.permission==='denied') return Promise.resolve('denied');
+    return Notification.requestPermission().catch(()=>'denied');
+  }
+
+  function clearScheduled(){
+    scheduledTimers.forEach(i=>clearTimeout(i));
+    scheduledTimers=[];
+  }
+
+  // Schedule start/end notifications for every pending top-level task
+  // (including locked ones). Works while the page/tab stays open.
+  function scheduleNotifications(){
+    clearScheduled();
+    if(!activeProfileId) return;
+    ensureNotificationPermission();
+    const tasks=normalizeTasks(loadTasks(activeProfileId));
+    const nowMs=now();
+    const MAX=2147483000; // ~24.8 days — max safe setTimeout delay
+    tasks.forEach(t=>{
+      // Only main pending tasks (skip subtasks and non-pending)
+      if(t.parentId || t.status!=='pending') return;
+      const segs=getSegments(t);
+      segs.forEach((s,idx)=>{
+        const partSuffix=segs.length>1 ? ` (part ${idx+1})` : '';
+        if(s.start > nowMs){
+          const d=s.start - nowMs;
+          if(d <= MAX){
+            scheduledTimers.push(setTimeout(()=>{
+              notify(`شروع: ${t.title}${partSuffix}`, 'زمان شروع تسک رسید');
+            }, d));
+          }
+        }
+        if(s.end > nowMs){
+          const d=s.end - nowMs;
+          if(d <= MAX){
+            scheduledTimers.push(setTimeout(()=>{
+              notify(`پایان: ${t.title}${partSuffix}`, 'زمان پایان تسک رسید');
+            }, d));
+          }
+        }
+      });
+    });
+  }
+
+  function notify(title, body){
+    try{
+      if('Notification' in window && Notification.permission==='granted'){
+        new Notification(title, {
+          body: body || '',
+          tag: 'timeline-' + String(title).slice(0,40),
+          renotify: true,
+          silent: false
+        });
+      } else {
+        showToast(title + (body ? ' — ' + body : ''));
+      }
+    }catch(e){
+      showToast(title);
+    }
+    try{ if(navigator.vibrate) navigator.vibrate([200,80,200]); }catch(e){}
+  }
+
+  // Explicit "Enable notifications" button (does not change core logic)
+  async function requestNotificationsAndReschedule(){
+    if(!('Notification' in window)){
+      alert('مرورگر شما از نوتیفیکیشن پشتیبانی نمی‌کند.');
+      return;
+    }
+    const result=await ensureNotificationPermission();
+    if(result==='granted'){
+      scheduleNotifications();
+      showToast('نوتیفیکیشن فعال شد ✓');
+    } else if(result==='denied'){
+      alert('مجوز نوتیفیکیشن رد شده. از تنظیمات مرورگر برای این سایت اجازه بدهید.');
+    } else {
+      showToast('وضعیت نوتیفیکیشن: ' + result);
+    }
+  }
 
   // ----------------------------
   // Ready Programs / CSV
