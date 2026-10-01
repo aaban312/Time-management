@@ -236,6 +236,7 @@
     <button type="button" data-panel="programsPanelModal">📦 برنامه‌های آماده</button>
     <button type="button" data-panel="delayPanel">⏱ Delay Control</button>
     <button type="button" id="settingsBtn">⚙ تنظیمات ظاهر</button>
+    <button type="button" id="menuClearAllTasks" style="color:var(--danger)">🗑️ حذف همه تسک‌ها</button>
   </div>
 </div>
 
@@ -251,6 +252,7 @@
 </section>
 
 <div class="timeline" id="timeline"></div>
+<div id="studyRestSummary" class="card" style="margin-top:12px;display:none"></div>
 <footer>Tip: Weight (0–10) · ⏱ duration lock · 🔒 time lock · رنگ و نام از ویرایش تسک</footer>
 <div id="toast" class="toast"></div>
 
@@ -313,6 +315,7 @@
     <div class="program-actions">
       <button id="applyProgram">Apply to day</button>
       <button id="saveProgramFromDay" class="secondary">Save this day as program</button>
+      <button id="replaceProgramWithCurrent" class="warning">Replace selected with current tasks</button>
       <button id="renameProgram" class="ghost">Rename program</button>
       <button id="deleteProgram" class="danger">Delete program</button>
       <button id="exportProgram" class="ghost">Export selected CSV</button>
@@ -365,6 +368,12 @@
       </label>
       <label class="field">Shift all by (minutes)
         <input id="shiftMinutes" type="number" min="1" step="1" placeholder="10" />
+      </label>
+      <label class="field">حداکثر پارت 📖 (دقیقه، ۰=بدون حد)
+        <input id="maxStudyPart" type="number" min="0" step="5" placeholder="0" />
+      </label>
+      <label class="field">حداکثر پارت 💤 (دقیقه، ۰=بدون حد)
+        <input id="maxRestPart" type="number" min="0" step="5" placeholder="0" />
       </label>
     </div>
     <div class="smart-actions">
@@ -497,6 +506,7 @@
   const DEFAULT_UI_SCALE = 90;
   const BASE_KEY = 'timeline_scheduler_v2_profiles';
   const PROFILE_LIST_KEY = 'timeline_scheduler_profiles_list';
+  const ACTIVE_PROFILE_KEY = 'timeline_scheduler_active_profile';
   const SETTINGS_KEY = 'timeline_scheduler_ui_settings_v3';
   const MAX_UNDO = 10;
 
@@ -564,11 +574,11 @@
 
   const els={
     profileSelect:document.getElementById('profileSelect'), addProfile:document.getElementById('addProfile'), renameProfile:document.getElementById('renameProfile'), deleteProfile:document.getElementById('deleteProfile'), settingsBtn:document.getElementById('settingsBtn'),
-    title:document.getElementById('title'), start:document.getElementById('start'), end:document.getElementById('end'), newTaskWeight:document.getElementById('newTaskWeight'), addBtn:document.getElementById('addBtn'), timeline:document.getElementById('timeline'), clearAll:document.getElementById('clearAll'), shiftMinutes:document.getElementById('shiftMinutes'), applyShiftDelay:document.getElementById('applyShiftDelay'), smartDelay:document.getElementById('smartDelay'), undoSmartDelay:document.getElementById('undoSmartDelay'), enableNotifications:document.getElementById('enableNotifications'), dayEnd:document.getElementById('dayEnd'), insertAfter:document.getElementById('insertAfter'), makeBox:document.getElementById('makeBox'), addSubtask:document.getElementById('addSubtask'),
+    title:document.getElementById('title'), start:document.getElementById('start'), end:document.getElementById('end'), newTaskWeight:document.getElementById('newTaskWeight'), addBtn:document.getElementById('addBtn'), timeline:document.getElementById('timeline'), clearAll:document.getElementById('clearAll'), shiftMinutes:document.getElementById('shiftMinutes'), applyShiftDelay:document.getElementById('applyShiftDelay'), smartDelay:document.getElementById('smartDelay'), undoSmartDelay:document.getElementById('undoSmartDelay'), enableNotifications:document.getElementById('enableNotifications'), dayEnd:document.getElementById('dayEnd'), maxStudyPart:document.getElementById('maxStudyPart'), maxRestPart:document.getElementById('maxRestPart'), insertAfter:document.getElementById('insertAfter'), makeBox:document.getElementById('makeBox'), addSubtask:document.getElementById('addSubtask'),
     noteDate:document.getElementById('noteDate'), noteText:document.getElementById('noteText'), addNote:document.getElementById('addNote'), notesList:document.getElementById('notesList'),
-    programSelect:document.getElementById('programSelect'), programDate:document.getElementById('programDate'), programApplyMode:document.getElementById('programApplyMode'), programSummary:document.getElementById('programSummary'), applyProgram:document.getElementById('applyProgram'), saveProgramFromDay:document.getElementById('saveProgramFromDay'), deleteProgram:document.getElementById('deleteProgram'), exportProgram:document.getElementById('exportProgram'), programCsvFile:document.getElementById('programCsvFile'), importProgramCsv:document.getElementById('importProgramCsv'),
+    programSelect:document.getElementById('programSelect'), programDate:document.getElementById('programDate'), programApplyMode:document.getElementById('programApplyMode'), programSummary:document.getElementById('programSummary'), applyProgram:document.getElementById('applyProgram'), saveProgramFromDay:document.getElementById('saveProgramFromDay'), replaceProgramWithCurrent:document.getElementById('replaceProgramWithCurrent'), deleteProgram:document.getElementById('deleteProgram'), exportProgram:document.getElementById('exportProgram'), programCsvFile:document.getElementById('programCsvFile'), importProgramCsv:document.getElementById('importProgramCsv'),
     settingsModal:document.getElementById('settingsModal'), uiScale:document.getElementById('uiScale'), uiScaleValue:document.getElementById('uiScaleValue'), appearanceSelect:document.getElementById('appearanceSelect'), defaultDayEnd:document.getElementById('defaultDayEnd'), themeSelect:document.getElementById('themeSelect'), taskTimeSize:document.getElementById('taskTimeSize'), taskTimeSizeValue:document.getElementById('taskTimeSizeValue'), settingsClose:document.getElementById('settingsClose'), resetSettings:document.getElementById('resetSettings'),
-    renameProgram:document.getElementById('renameProgram'),
+    renameProgram:document.getElementById('renameProgram'), menuClearAllTasks:document.getElementById('menuClearAllTasks'), studyRestSummary:document.getElementById('studyRestSummary'),
     smartPreviewModal:document.getElementById('smartPreviewModal'), smartPreviewStats:document.getElementById('smartPreviewStats'), smartPreviewList:document.getElementById('smartPreviewList'), smartPreviewWarning:document.getElementById('smartPreviewWarning'), smartPreviewCancel:document.getElementById('smartPreviewCancel'), smartPreviewApply:document.getElementById('smartPreviewApply'),
     deleteTaskModal:document.getElementById('deleteTaskModal'), deleteTaskMessage:document.getElementById('deleteTaskMessage'), deleteTaskOnly:document.getElementById('deleteTaskOnly'), deleteTaskShift:document.getElementById('deleteTaskShift'), deleteTaskCancel:document.getElementById('deleteTaskCancel')
   };
@@ -576,7 +586,7 @@
   // ----------------------------
   // Settings / themes / scale
   // ----------------------------
-  function defaultSettings(){ return {scale:DEFAULT_UI_SCALE,appearance:'system',theme:'ocean',defaultDayEnd:DEFAULT_DAY_END,taskTimeSize:13} }
+  function defaultSettings(){ return {scale:DEFAULT_UI_SCALE,appearance:'system',theme:'ocean',defaultDayEnd:DEFAULT_DAY_END,taskTimeSize:13,maxStudyPart:0,maxRestPart:0} }
   function loadSettings(){
     let s={}; try{s=JSON.parse(localStorage.getItem(SETTINGS_KEY)||'{}')}catch(e){}
     return Object.assign(defaultSettings(),s);
@@ -595,6 +605,8 @@
     if(els.themeSelect) els.themeSelect.value=s.theme||'ocean';
     if(els.defaultDayEnd) els.defaultDayEnd.value=s.defaultDayEnd||DEFAULT_DAY_END;
     if(els.taskTimeSize){ els.taskTimeSize.value=timeSize; els.taskTimeSizeValue.textContent=timeSize+'px'; }
+    if(els.maxStudyPart) els.maxStudyPart.value=String(Number.isFinite(Number(s.maxStudyPart))?Number(s.maxStudyPart):0);
+    if(els.maxRestPart) els.maxRestPart.value=String(Number.isFinite(Number(s.maxRestPart))?Number(s.maxRestPart):0);
     document.querySelectorAll('.theme-dot').forEach(b=>b.classList.toggle('active',b.dataset.themeChoice===(s.theme||'ocean')));
     if(els.dayEnd && !els.dayEnd.value) els.dayEnd.value=s.defaultDayEnd||DEFAULT_DAY_END;
     const accent=getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
@@ -608,6 +620,21 @@
     s.theme=els.themeSelect.value;
     s.defaultDayEnd=els.defaultDayEnd.value||DEFAULT_DAY_END;
     s.taskTimeSize=Number(els.taskTimeSize?.value)||13;
+    s.maxStudyPart=Math.max(0,Number(els.maxStudyPart?.value)||0);
+    s.maxRestPart=Math.max(0,Number(els.maxRestPart?.value)||0);
+    saveSettings(s);
+  }
+  function persistDayEndAsDefault(){
+    if(!els.dayEnd||!els.dayEnd.value)return;
+    const s=loadSettings();
+    s.defaultDayEnd=els.dayEnd.value;
+    if(els.defaultDayEnd) els.defaultDayEnd.value=els.dayEnd.value;
+    saveSettings(s);
+  }
+  function persistMaxPartDefaults(){
+    const s=loadSettings();
+    s.maxStudyPart=Math.max(0,Number(els.maxStudyPart?.value)||0);
+    s.maxRestPart=Math.max(0,Number(els.maxRestPart?.value)||0);
     saveSettings(s);
   }
   if(els.settingsBtn) els.settingsBtn.onclick=openSettings;
@@ -698,17 +725,26 @@
       if(localStorage.getItem(undoKeyForProfile(p.id))===null)localStorage.setItem(undoKeyForProfile(p.id),JSON.stringify([]));
       const normalized=normalizeTasks(loadTasks(p.id)); localStorage.setItem(keyForProfile(p.id),JSON.stringify(normalized));
     });
+    const savedActive=localStorage.getItem(ACTIVE_PROFILE_KEY);
+    if(savedActive&&profiles.some(p=>p.id===savedActive)) activeProfileId=savedActive;
     if(!activeProfileId||!profiles.some(p=>p.id===activeProfileId))activeProfileId=profiles[0]?.id||null;
+    if(activeProfileId) localStorage.setItem(ACTIVE_PROFILE_KEY,activeProfileId);
     renderProfileSelect(); updateUndoButton();
+  }
+  function setActiveProfile(pid){
+    activeProfileId=pid;
+    if(pid) localStorage.setItem(ACTIVE_PROFILE_KEY,pid);
   }
   function renderProfileSelect(){
     els.profileSelect.innerHTML=''; profiles.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.name;els.profileSelect.appendChild(o)});
-    if(activeProfileId==null&&profiles.length)activeProfileId=profiles[0].id; els.profileSelect.value=activeProfileId||''; render();
+    if(activeProfileId==null&&profiles.length)activeProfileId=profiles[0].id;
+    if(activeProfileId) localStorage.setItem(ACTIVE_PROFILE_KEY,activeProfileId);
+    els.profileSelect.value=activeProfileId||''; render();
   }
-  els.profileSelect.addEventListener('change',()=>{activeProfileId=els.profileSelect.value;render();scheduleNotifications();updateUndoButton()});
-  els.addProfile.onclick=()=>{ const name=prompt('Profile name','New Profile'); if(!name)return; const p={id:uid(),name:name.trim()}; profiles.push(p); activeProfileId=p.id; localStorage.setItem(PROFILE_LIST_KEY,JSON.stringify(profiles)); localStorage.setItem(keyForProfile(p.id),'[]'); localStorage.setItem(notesKeyForProfile(p.id),'[]'); localStorage.setItem(programsKeyForProfile(p.id),'[]'); localStorage.setItem(undoKeyForProfile(p.id),'[]'); renderProfileSelect() };
+  els.profileSelect.addEventListener('change',()=>{setActiveProfile(els.profileSelect.value);render();scheduleNotifications();updateUndoButton()});
+  els.addProfile.onclick=()=>{ const name=prompt('Profile name','New Profile'); if(!name)return; const p={id:uid(),name:name.trim()}; profiles.push(p); setActiveProfile(p.id); localStorage.setItem(PROFILE_LIST_KEY,JSON.stringify(profiles)); localStorage.setItem(keyForProfile(p.id),'[]'); localStorage.setItem(notesKeyForProfile(p.id),'[]'); localStorage.setItem(programsKeyForProfile(p.id),'[]'); localStorage.setItem(undoKeyForProfile(p.id),'[]'); renderProfileSelect() };
   els.renameProfile.onclick=()=>{const p=profiles.find(x=>x.id===activeProfileId);if(!p)return;const n=prompt('New name',p.name);if(!n)return;p.name=n.trim();saveProfiles(profiles)};
-  els.deleteProfile.onclick=()=>{if(!activeProfileId||!confirm('Delete this profile and all its tasks, notes and ready programs?'))return;const idx=profiles.findIndex(x=>x.id===activeProfileId);if(idx<0)return;const pid=profiles[idx].id;profiles.splice(idx,1);[keyForProfile(pid),notesKeyForProfile(pid),programsKeyForProfile(pid),undoKeyForProfile(pid)].forEach(k=>localStorage.removeItem(k));if(!profiles.length){const p={id:uid(),name:'Profile A'};profiles=[p];localStorage.setItem(keyForProfile(p.id),'[]');localStorage.setItem(notesKeyForProfile(p.id),'[]');localStorage.setItem(programsKeyForProfile(p.id),'[]');localStorage.setItem(undoKeyForProfile(p.id),'[]')}activeProfileId=profiles[0].id;saveProfiles(profiles)};
+  els.deleteProfile.onclick=()=>{if(!activeProfileId||!confirm('Delete this profile and all its tasks, notes and ready programs?'))return;const idx=profiles.findIndex(x=>x.id===activeProfileId);if(idx<0)return;const pid=profiles[idx].id;profiles.splice(idx,1);[keyForProfile(pid),notesKeyForProfile(pid),programsKeyForProfile(pid),undoKeyForProfile(pid)].forEach(k=>localStorage.removeItem(k));if(!profiles.length){const p={id:uid(),name:'Profile A'};profiles=[p];localStorage.setItem(keyForProfile(p.id),'[]');localStorage.setItem(notesKeyForProfile(p.id),'[]');localStorage.setItem(programsKeyForProfile(p.id),'[]');localStorage.setItem(undoKeyForProfile(p.id),'[]')}setActiveProfile(profiles[0].id);saveProfiles(profiles)};
 
   // ----------------------------
   // Date/time helpers
@@ -823,8 +859,14 @@
 
   function statusLabel(status){return status==='done'?'Done':status==='skipped'?'Skipped':'Pending'}
   function statusClass(status){return status==='done'?'done':status==='skipped'?'skipped':''}
-  function makeTaskControls(t){
+  function makeTaskControls(t, orderIndex, totalTop){
     const wrap=document.createElement('div');wrap.className='task-toolbar';
+
+    const ordLabel=document.createElement('label');ordLabel.className='compact-label';ordLabel.title='جابه‌جایی با شماره دیگر';
+    const ordTag=document.createElement('span');ordTag.textContent='#';
+    const ord=document.createElement('input');ord.type='number';ord.min='1';ord.max=String(Math.max(1,totalTop||1));ord.step='1';ord.value=String(orderIndex);ord.className='priority-input';ord.setAttribute('aria-label','Order number');
+    ord.onchange=()=>swapTaskPositions(t.id, Number(ord.value));
+    ordLabel.append(ordTag,ord);
 
     const wLabel=document.createElement('label');wLabel.className='compact-label';wLabel.title='Weight (0–10)';
     const wTag=document.createElement('span');wTag.textContent='W';
@@ -837,6 +879,8 @@
 
     if(t.isBox){
       const add=document.createElement('button');add.className='ghost icon-btn';add.textContent='＋';add.title='Add subtask';add.setAttribute('aria-label','Add subtask');add.onclick=()=>openSubtaskModalForBox(t.id,t.start,t.end);wrap.appendChild(add);
+    } else if(!t.parentId){
+      const toBox=document.createElement('button');toBox.className='ghost icon-btn';toBox.textContent='📦';toBox.title='تبدیل به Box';toBox.onclick=()=>convertTaskToBox(t.id);wrap.appendChild(toBox);
     }
     // Cycle lock: none → duration (⏱) → time (🔒) → none
     const lockBtn=document.createElement('button');lockBtn.className='pin icon-btn';
@@ -846,8 +890,30 @@
     lockBtn.setAttribute('aria-label',lockBtn.title);lockBtn.onclick=()=>cycleTaskLock(t.id);
     const edit=document.createElement('button');edit.className='ghost icon-btn';edit.textContent='⚙️';edit.title='Edit task';edit.setAttribute('aria-label','Edit task');edit.onclick=()=>openEditModal(t.id);
     const del=document.createElement('button');del.className='danger icon-btn';del.textContent='🗑️';del.title='Delete task';del.setAttribute('aria-label','Delete task');del.onclick=()=>deleteTaskWithOptions(t.id);
-    wrap.append(wLabel,sel,lockBtn,edit,del);
+    wrap.append(ordLabel,wLabel,sel,lockBtn,edit,del);
     return wrap;
+  }
+  function swapTaskPositions(id, targetOrder1Based){
+    if(!activeProfileId)return;
+    const tasks=normalizeTasks(loadTasks(activeProfileId));
+    const top=tasks.filter(t=>!t.parentId).sort((a,b)=>taskFirstStart(a)-taskFirstStart(b));
+    const fromIdx=top.findIndex(t=>t.id===id);
+    const toIdx=Math.round(Number(targetOrder1Based))-1;
+    if(fromIdx<0||toIdx<0||toIdx>=top.length||fromIdx===toIdx){render();return}
+    const a=top[fromIdx], b=top[toIdx];
+    const aSegs=getSegments(a).map(s=>({start:s.start,end:s.end}));
+    const bSegs=getSegments(b).map(s=>({start:s.start,end:s.end}));
+    const aOrig=a.originalDurationMs, bOrig=b.originalDurationMs;
+    setSegments(a,bSegs); setSegments(b,aSegs);
+    a.originalDurationMs=bOrig; b.originalDurationMs=aOrig;
+    saveTasks(activeProfileId,tasks);showToast(`جابه‌جایی #${fromIdx+1} ↔ #${toIdx+1}`);
+  }
+  function convertTaskToBox(id){
+    const tasks=normalizeTasks(loadTasks(activeProfileId)),t=tasks.find(x=>x.id===id);
+    if(!t||t.parentId){alert('فقط تسک اصلی قابل تبدیل است');return}
+    if(t.isBox){showToast('قبلاً Box است');return}
+    t.isBox=true; if(!t.color) t.color='#60a5fa';
+    saveTasks(activeProfileId,tasks);showToast('تبدیل به Box شد');
   }
   function makeRangeChips(t){const segs=getSegments(t);if(segs.length<=1)return null;const w=document.createElement('div');w.className='range-list';segs.forEach(s=>{const c=document.createElement('span');c.className='range-chip';c.textContent=`${fmtTime(s.start)}–${fmtTime(s.end)}`;w.appendChild(c)});return w}
   function render(){
@@ -866,14 +932,14 @@
         applyTaskColorStyle(box,t);
         const header=document.createElement('div');header.className='box-header';
         const left=document.createElement('div');left.style.flex='1';
-        left.innerHTML=`<div style="font-weight:700">${escapeHtml(t.title)} ${t.lockTime?'🔒':t.lockDuration?'⏱':''}</div><div class="task-time">${escapeHtml(rangeText(t))}</div>${changed?`<div class="tiny changed-time">Original ${fmtDuration(orig)} → Current ${fmtDuration(currentDur)}</div>`:''}`;
-        const chips=makeRangeChips(t);if(chips)left.appendChild(chips);left.appendChild(makeTaskControls(t));
+        left.innerHTML=`<div style="font-weight:700">${escapeHtml(t.title)} ${t.lockTime?'🔒':t.lockDuration?'⏱':''}</div><div class="task-time">${escapeHtml(rangeText(t))} · <strong>${fmtDuration(currentDur)}</strong></div>${changed?`<div class="tiny changed-time">Original ${fmtDuration(orig)} → Current ${fmtDuration(currentDur)}</div>`:''}`;
+        const chips=makeRangeChips(t);if(chips)left.appendChild(chips);left.appendChild(makeTaskControls(t, top.indexOf(t)+1, top.length));
         header.appendChild(left);box.appendChild(header);
         tasks.filter(x=>x.parentId===t.id).sort((a,b)=>taskFirstStart(a)-taskFirstStart(b)).forEach(s=>{
           const d=document.createElement('div');d.className='box-subtask';
           applyTaskColorStyle(d,s);
           const row=document.createElement('div');row.style.display='flex';row.style.justifyContent='space-between';row.style.gap='8px';row.style.alignItems='center';
-          const info=document.createElement('div');info.style.minWidth='0';info.style.flex='1';info.innerHTML=`<strong>${escapeHtml(s.title)}</strong><div class="task-time">${escapeHtml(rangeText(s))}</div>`;
+          const info=document.createElement('div');info.style.minWidth='0';info.style.flex='1';info.innerHTML=`<strong>${escapeHtml(s.title)}</strong><div class="task-time">${escapeHtml(rangeText(s))} · <strong>${fmtDuration(taskDuration(s))}</strong></div>`;
           const actions=document.createElement('div');actions.className='actions';actions.style.flexWrap='nowrap';
           const edit=document.createElement('button');edit.className='ghost icon-btn';edit.textContent='⚙️';edit.title='Edit subtask';edit.onclick=()=>openEditModal(s.id);
           const del=document.createElement('button');del.className='danger icon-btn';del.textContent='🗑️';del.title='Delete subtask';del.onclick=()=>deleteTaskWithOptions(s.id);
@@ -884,10 +950,30 @@
         const el=document.createElement('div');el.className='task '+statusClass(t.status);el.dataset.id=t.id;
         applyTaskColorStyle(el,t);
         const left=document.createElement('div');left.className='meta';
-        left.innerHTML=`<div class="title-row"><div style="font-weight:700">${escapeHtml(t.title)} ${t.lockTime?'🔒':t.lockDuration?'⏱':''}</div><div class="task-time">${escapeHtml(rangeText(t))}</div></div>${changed?`<div class="tiny changed-time">Original ${fmtDuration(orig)} → Current ${fmtDuration(currentDur)}</div>`:''}`;
-        const chips=makeRangeChips(t);if(chips)left.appendChild(chips);left.appendChild(makeTaskControls(t));el.appendChild(left);els.timeline.appendChild(el);
+        left.innerHTML=`<div class="title-row"><div style="font-weight:700">${escapeHtml(t.title)} ${t.lockTime?'🔒':t.lockDuration?'⏱':''}</div><div class="task-time">${escapeHtml(rangeText(t))} · <strong>${fmtDuration(currentDur)}</strong></div></div>${changed?`<div class="tiny changed-time">Original ${fmtDuration(orig)} → Current ${fmtDuration(currentDur)}</div>`:''}`;
+        const chips=makeRangeChips(t);if(chips)left.appendChild(chips);left.appendChild(makeTaskControls(t, top.indexOf(t)+1, top.length));el.appendChild(left);els.timeline.appendChild(el);
       }
     });
+    // Study / rest totals by leading emoji
+    let studyMs=0, restMs=0;
+    top.forEach(t=>{
+      const title=(t.title||'').trimStart();
+      const dur=taskDuration(t);
+      if(title.startsWith('📖')) studyMs+=dur;
+      if(title.startsWith('💤')) restMs+=dur;
+    });
+    if(els.studyRestSummary){
+      if(studyMs>0 || restMs>0){
+        els.studyRestSummary.style.display='block';
+        els.studyRestSummary.innerHTML=`<div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
+          <div><strong>کل زمان مطالعه</strong> 📖: ${fmtDuration(studyMs)}</div>
+          <div><strong>جمع زمان استراحت</strong> 💤: ${fmtDuration(restMs)}</div>
+        </div>`;
+      } else {
+        els.studyRestSummary.style.display='none';
+        els.studyRestSummary.innerHTML='';
+      }
+    }
   }
 
   // ----------------------------
@@ -1085,6 +1171,29 @@
     }
     // Time-locked keep original segments (not in targetMsById for reallocation)
 
+    // Cap 📖 / 💤 parts by max settings; overflow becomes continuation tasks
+    persistMaxPartDefaults();
+    const maxStudyMs=Math.max(0,Number(els.maxStudyPart?.value)||0)*60000;
+    const maxRestMs=Math.max(0,Number(els.maxRestPart?.value)||0)*60000;
+    const continuations=[]; // {sourceId,title,weight,colorKey,extraMs}
+    for(const t of flexible){
+      const title=(t.title||'').trimStart();
+      let maxMs=0;
+      if(title.startsWith('📖') && maxStudyMs>0) maxMs=maxStudyMs;
+      if(title.startsWith('💤') && maxRestMs>0) maxMs=maxRestMs;
+      if(maxMs>0 && (targetMsById[t.id]||0)>maxMs){
+        const extra=(targetMsById[t.id]||0)-maxMs;
+        targetMsById[t.id]=maxMs;
+        continuations.push({
+          sourceId:t.id,
+          title: (t.title||'').replace(/\s*\(ادامه\)\s*$/,'') + ' (ادامه)',
+          weight:t.weight??5,
+          colorKey:t.colorKey||'',
+          extraMs:extra
+        });
+      }
+    }
+
     // Place flexible + duration-locked into free intervals (order preserved)
     // Time-locked stay put.
     const state={idx:0, cursor: freeIntervals[0]?.start ?? nowMs};
@@ -1114,11 +1223,27 @@
       });
     }
 
+    // Allocate continuation parts at the end of remaining free intervals
+    const continuationSpecs=[];
+    for(const c of continuations){
+      const a=allocateAcrossFreeIntervals(Math.round(c.extraMs), freeIntervals, state);
+      overflow+=a.unallocated;
+      continuationSpecs.push({
+        title:c.title, weight:c.weight, colorKey:c.colorKey,
+        target:Math.round(c.extraMs), segments:a.segments,
+        sourceId:c.sourceId
+      });
+      rows.push({
+        id:'cont:'+c.sourceId, title:c.title, weight:c.weight, lock:'continuation',
+        before:0, target:Math.round(c.extraMs), after:totalIntervalDuration(a.segments)
+      });
+    }
+
     return {
       createdAt:Date.now(), nowMs, dayEndMs,
       freeFuture:freeMs, reservedMs, distributable,
       locks:mergedIntervals(timeLockIntervals), freeIntervals,
-      newSegmentsById, overflow, rows
+      newSegmentsById, overflow, rows, continuationSpecs
     };
   }
 
@@ -1178,6 +1303,21 @@
         if(t.isBox) tasks.filter(x=>x.parentId===t.id).forEach(ch=>{ch.status='done';ch.segments=[];ch.start=ch.end=plan.nowMs});
       }
     }
+    // Create continuation tasks from overflow parts
+    if(Array.isArray(plan.continuationSpecs)){
+      for(const c of plan.continuationSpecs){
+        if(!c.segments||!c.segments.length) continue;
+        const s=c.segments[0].start, e=c.segments[c.segments.length-1].end;
+        tasks.push({
+          id:uid(), title:c.title, start:s, end:e, segments:c.segments.map(x=>({start:x.start,end:x.end})),
+          pinned:false, lockTime:false, lockDuration:false, isBox:false, parentId:null,
+          weight:clamp(Number(c.weight)||5,0,10), priority:Math.max(10,Math.round((Number(c.weight)||5)*50)),
+          status:'pending', originalDurationMs:totalIntervalDuration(c.segments),
+          colorKey:c.colorKey||''
+        });
+      }
+    }
+    persistDayEndAsDefault();
     saveTasks(activeProfileId,tasks,{toast:false});
     els.smartPreviewModal.style.display='none';
     pendingSmartPlan=null;
@@ -1300,11 +1440,56 @@
   // Ready Programs / CSV
   // ----------------------------
   function saveCurrentDayAsProgram(){
-    if(!activeProfileId)return;const day=els.programDate.value;if(!day){alert('Choose a day first');return}const tasks=normalizeTasks(loadTasks(activeProfileId)),top=tasks.filter(t=>!t.parentId&&dateKey(taskFirstStart(t))===day).sort((a,b)=>taskFirstStart(a)-taskFirstStart(b));if(!top.length){alert('No main tasks start on that day');return}const raw=prompt('Program name','Study Day');if(!raw)return;const name=raw.trim(),topIds=new Set(top.map(t=>t.id)),selected=tasks.filter(t=>topIds.has(t.id)||(t.parentId&&topIds.has(t.parentId))),map=new Map();top.forEach(t=>map.set(t.id,uid()));selected.filter(t=>t.parentId).forEach(t=>map.set(t.id,uid()));const parts=selected.map(t=>({templateId:map.get(t.id),parentTemplateId:t.parentId?map.get(t.parentId):null,title:t.title,startOffsetMin:minutesFromDayStart(t.start,day),endOffsetMin:minutesFromDayStart(t.end,day),isBox:!!t.isBox,pinned:!!t.pinned,lockTime:!!t.lockTime,lockDuration:!!t.lockDuration,weight:Number(t.weight)||5,priority:Number(t.priority)||100})).sort((a,b)=>a.startOffsetMin-b.startOffsetMin);const programs=loadPrograms(activeProfileId),same=programs.find(p=>p.name.toLowerCase()===name.toLowerCase());if(same){if(!confirm(`A program named “${name}” already exists. Replace it?`))return;same.parts=parts;same.updatedAt=Date.now();savePrograms(activeProfileId,programs,true);els.programSelect.value=same.id}else{const p={id:uid(),name,createdAt:Date.now(),parts};programs.push(p);savePrograms(activeProfileId,programs,true);els.programSelect.value=p.id}updateProgramSummary();showToast('Day saved as reusable program')
+    if(!activeProfileId)return;const day=els.programDate.value;if(!day){alert('Choose a day first');return}const tasks=normalizeTasks(loadTasks(activeProfileId)),top=tasks.filter(t=>!t.parentId&&dateKey(taskFirstStart(t))===day).sort((a,b)=>taskFirstStart(a)-taskFirstStart(b));if(!top.length){alert('No main tasks start on that day');return}const raw=prompt('Program name','Study Day');if(!raw)return;const name=raw.trim(),topIds=new Set(top.map(t=>t.id)),selected=tasks.filter(t=>topIds.has(t.id)||(t.parentId&&topIds.has(t.parentId))),map=new Map();top.forEach(t=>map.set(t.id,uid()));selected.filter(t=>t.parentId).forEach(t=>map.set(t.id,uid()));const parts=selected.map(t=>({templateId:map.get(t.id),parentTemplateId:t.parentId?map.get(t.parentId):null,title:t.title,startOffsetMin:minutesFromDayStart(t.start,day),endOffsetMin:minutesFromDayStart(t.end,day),isBox:!!t.isBox,pinned:!!t.pinned,lockTime:!!t.lockTime,lockDuration:!!t.lockDuration,weight:Number(t.weight)||5,priority:Number(t.priority)||100,colorKey:t.colorKey||''})).sort((a,b)=>a.startOffsetMin-b.startOffsetMin);const programs=loadPrograms(activeProfileId),same=programs.find(p=>p.name.toLowerCase()===name.toLowerCase());if(same){if(!confirm(`A program named “${name}” already exists. Replace it?`))return;same.parts=parts;same.updatedAt=Date.now();savePrograms(activeProfileId,programs,true);els.programSelect.value=same.id}else{const p={id:uid(),name,createdAt:Date.now(),parts};programs.push(p);savePrograms(activeProfileId,programs,true);els.programSelect.value=p.id}updateProgramSummary();showToast('Day saved as reusable program')
   }
   function collectTargetDayIds(tasks,day){const topIds=new Set(tasks.filter(t=>!t.parentId&&dateKey(taskFirstStart(t))===day).map(t=>t.id)),all=new Set(topIds);tasks.forEach(t=>{if(t.parentId&&topIds.has(t.parentId))all.add(t.id)});return all}
   function applySelectedProgram(){
-    if(!activeProfileId)return;const program=loadPrograms(activeProfileId).find(p=>p.id===els.programSelect.value);if(!program){alert('Choose a saved program');return}const day=els.programDate.value;if(!day){alert('Choose the target day');return}const base=localMidnightMs(day);if(base===null){alert('Invalid target day');return}let tasks=normalizeTasks(loadTasks(activeProfileId));if(els.programApplyMode.value==='replace'){const ids=collectTargetDayIds(tasks,day);if(ids.size&& !confirm('This day already has tasks. Replace those tasks with the selected program?'))return;tasks=tasks.filter(t=>!ids.has(t.id))}const idMap=new Map();program.parts.forEach(p=>idMap.set(p.templateId,uid()));const created=program.parts.map(p=>{const s=base+p.startOffsetMin*60000,e=base+p.endOffsetMin*60000;const w=Number.isFinite(Number(p.weight))?Number(p.weight):(Number.isFinite(Number(p.priority))?clamp(Math.round(Number(p.priority)/50),0,10):5);return{id:idMap.get(p.templateId),title:p.title,start:s,end:e,segments:[{start:s,end:e}],pinned:!!p.pinned,lockTime:!!(p.lockTime||p.pinned),lockDuration:!!p.lockDuration,isBox:!!p.isBox,color:p.isBox?'#60a5fa':null,parentId:p.parentTemplateId?idMap.get(p.parentTemplateId):null,weight:clamp(w,0,10),priority:Math.max(10,Math.round(clamp(w,0,10)*50)),status:'pending',originalDurationMs:e-s}});tasks.push(...created);saveTasks(activeProfileId,tasks);showToast(`Applied “${program.name}” to ${day}`)
+    if(!activeProfileId)return;const program=loadPrograms(activeProfileId).find(p=>p.id===els.programSelect.value);if(!program){alert('Choose a saved program');return}const day=els.programDate.value;if(!day){alert('Choose the target day');return}const base=localMidnightMs(day);if(base===null){alert('Invalid target day');return}let tasks=normalizeTasks(loadTasks(activeProfileId));if(els.programApplyMode.value==='replace'){const ids=collectTargetDayIds(tasks,day);if(ids.size&& !confirm('This day already has tasks. Replace those tasks with the selected program?'))return;tasks=tasks.filter(t=>!ids.has(t.id))}const idMap=new Map();program.parts.forEach(p=>idMap.set(p.templateId,uid()));const created=program.parts.map(p=>{const s=base+p.startOffsetMin*60000,e=base+p.endOffsetMin*60000;const w=Number.isFinite(Number(p.weight))?Number(p.weight):(Number.isFinite(Number(p.priority))?clamp(Math.round(Number(p.priority)/50),0,10):5);return{id:idMap.get(p.templateId),title:p.title,start:s,end:e,segments:[{start:s,end:e}],pinned:!!p.pinned,lockTime:!!(p.lockTime||p.pinned),lockDuration:!!p.lockDuration,isBox:!!p.isBox,color:p.isBox?'#60a5fa':null,parentId:p.parentTemplateId?idMap.get(p.parentTemplateId):null,weight:clamp(w,0,10),priority:Math.max(10,Math.round(clamp(w,0,10)*50)),status:'pending',originalDurationMs:e-s,colorKey:p.colorKey||''}});tasks.push(...created);saveTasks(activeProfileId,tasks);showToast(`Applied “${program.name}” to ${day}`)
+  }
+  function replaceSelectedProgramWithCurrent(){
+    if(!activeProfileId)return;
+    const id=els.programSelect.value;
+    if(!id){alert('ابتدا یک برنامه آماده انتخاب کن');return}
+    const day=els.programDate.value || dateKey(now());
+    const tasks=normalizeTasks(loadTasks(activeProfileId));
+    const top=tasks.filter(t=>!t.parentId&&dateKey(taskFirstStart(t))===day).sort((a,b)=>taskFirstStart(a)-taskFirstStart(b));
+    if(!top.length){
+      // fallback: all current top-level pending/all tasks
+      const allTop=tasks.filter(t=>!t.parentId).sort((a,b)=>taskFirstStart(a)-taskFirstStart(b));
+      if(!allTop.length){alert('تسکی برای ذخیره نیست');return}
+      return replaceProgramParts(id, allTop, tasks, dateKey(taskFirstStart(allTop[0])));
+    }
+    return replaceProgramParts(id, top, tasks, day);
+  }
+  function replaceProgramParts(programId, top, tasks, day){
+    if(!confirm('محتوای برنامه انتخاب‌شده با تسک‌های جاری جایگزین شود؟'))return;
+    const topIds=new Set(top.map(t=>t.id));
+    const selected=tasks.filter(t=>topIds.has(t.id)||(t.parentId&&topIds.has(t.parentId)));
+    const map=new Map();
+    top.forEach(t=>map.set(t.id,uid()));
+    selected.filter(t=>t.parentId).forEach(t=>map.set(t.id,uid()));
+    const parts=selected.map(t=>({
+      templateId:map.get(t.id),
+      parentTemplateId:t.parentId?map.get(t.parentId):null,
+      title:t.title,
+      startOffsetMin:minutesFromDayStart(taskFirstStart(t),day),
+      endOffsetMin:minutesFromDayStart(taskLastEnd(t),day),
+      isBox:!!t.isBox,
+      pinned:!!t.pinned,
+      lockTime:!!t.lockTime,
+      lockDuration:!!t.lockDuration,
+      weight:Number(t.weight)||5,
+      priority:Number(t.priority)||100,
+      colorKey:t.colorKey||''
+    })).sort((a,b)=>a.startOffsetMin-b.startOffsetMin);
+    const programs=loadPrograms(activeProfileId);
+    const p=programs.find(x=>x.id===programId);
+    if(!p){alert('برنامه پیدا نشد');return}
+    p.parts=parts; p.updatedAt=Date.now();
+    savePrograms(activeProfileId,programs,true);
+    els.programSelect.value=programId;
+    updateProgramSummary();
+    showToast('برنامه با تسک‌های جاری جایگزین شد');
   }
   function deleteSelectedProgram(){const id=els.programSelect.value;if(!id){alert('Choose a program');return}const ps=loadPrograms(activeProfileId),p=ps.find(x=>x.id===id);if(!p)return;if(!confirm(`Delete ready program “${p.name}”?`))return;savePrograms(activeProfileId,ps.filter(x=>x.id!==id))}
   function renameSelectedProgram(){
@@ -1324,6 +1509,12 @@
   }
   els.saveProgramFromDay.onclick=saveCurrentDayAsProgram;els.applyProgram.onclick=applySelectedProgram;els.deleteProgram.onclick=deleteSelectedProgram;els.exportProgram.onclick=exportSelectedProgram;els.importProgramCsv.onclick=importProgramsFromCsv;
   if(els.renameProgram) els.renameProgram.onclick=renameSelectedProgram;
+  if(els.replaceProgramWithCurrent) els.replaceProgramWithCurrent.onclick=replaceSelectedProgramWithCurrent;
+  if(els.menuClearAllTasks) els.menuClearAllTasks.onclick=()=>{closeMainMenu();deleteAll();};
+  if(els.dayEnd) els.dayEnd.addEventListener('change',persistDayEndAsDefault);
+  if(els.maxStudyPart) els.maxStudyPart.addEventListener('change',persistMaxPartDefaults);
+  if(els.maxRestPart) els.maxRestPart.addEventListener('change',persistMaxPartDefaults);
+  if(els.clearAll) els.clearAll.onclick=deleteAll;
 
   // ----------------------------
   // Wiring/start
@@ -1334,7 +1525,7 @@
 
   applySettings(loadSettings());
   ensureProfiles();
-  const nowMs=now();els.start.value=toInputLocal(nowMs);els.end.value=toInputLocal(nowMs+30*60000);const today=dateKey(nowMs);els.noteDate.value=today;els.programDate.value=today;els.dayEnd.value=loadSettings().defaultDayEnd||DEFAULT_DAY_END;scheduleNotifications();
+  const nowMs=now();els.start.value=toInputLocal(nowMs);els.end.value=toInputLocal(nowMs+30*60000);const today=dateKey(nowMs);els.noteDate.value=today;els.programDate.value=today;const _s=loadSettings();els.dayEnd.value=_s.defaultDayEnd||DEFAULT_DAY_END;if(els.maxStudyPart)els.maxStudyPart.value=String(_s.maxStudyPart||0);if(els.maxRestPart)els.maxRestPart.value=String(_s.maxRestPart||0);scheduleNotifications();
 
   window.__timeline={
     loadTasks:()=>normalizeTasks(loadTasks(activeProfileId)),
