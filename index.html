@@ -379,6 +379,9 @@
   <div class="modal">
     <h2>Delay Control</h2>
     <div class="smart-controls">
+      <label class="field">Day starts at (خالی = الان)
+        <input id="dayStart" type="time" />
+      </label>
       <label class="field">Day ends at
         <input id="dayEnd" type="time" />
       </label>
@@ -603,7 +606,7 @@
 
   const els={
     profileSelect:document.getElementById('profileSelect'), addProfile:document.getElementById('addProfile'), renameProfile:document.getElementById('renameProfile'), deleteProfile:document.getElementById('deleteProfile'), settingsBtn:document.getElementById('settingsBtn'),
-    title:document.getElementById('title'), start:document.getElementById('start'), end:document.getElementById('end'), newTaskWeight:document.getElementById('newTaskWeight'), addBtn:document.getElementById('addBtn'), timeline:document.getElementById('timeline'), clearAll:document.getElementById('clearAll'), shiftMinutes:document.getElementById('shiftMinutes'), applyShiftDelay:document.getElementById('applyShiftDelay'), smartDelay:document.getElementById('smartDelay'), undoSmartDelay:document.getElementById('undoSmartDelay'), enableNotifications:document.getElementById('enableNotifications'), dayEnd:document.getElementById('dayEnd'), maxStudyPart:document.getElementById('maxStudyPart'), maxRestPart:document.getElementById('maxRestPart'), insertAfter:document.getElementById('insertAfter'), makeBox:document.getElementById('makeBox'), addSubtask:document.getElementById('addSubtask'),
+    title:document.getElementById('title'), start:document.getElementById('start'), end:document.getElementById('end'), newTaskWeight:document.getElementById('newTaskWeight'), addBtn:document.getElementById('addBtn'), timeline:document.getElementById('timeline'), clearAll:document.getElementById('clearAll'), shiftMinutes:document.getElementById('shiftMinutes'), applyShiftDelay:document.getElementById('applyShiftDelay'), smartDelay:document.getElementById('smartDelay'), undoSmartDelay:document.getElementById('undoSmartDelay'), enableNotifications:document.getElementById('enableNotifications'), dayStart:document.getElementById('dayStart'), dayEnd:document.getElementById('dayEnd'), maxStudyPart:document.getElementById('maxStudyPart'), maxRestPart:document.getElementById('maxRestPart'), insertAfter:document.getElementById('insertAfter'), makeBox:document.getElementById('makeBox'), addSubtask:document.getElementById('addSubtask'),
     noteDate:document.getElementById('noteDate'), noteText:document.getElementById('noteText'), addNote:document.getElementById('addNote'), notesList:document.getElementById('notesList'),
     programSelect:document.getElementById('programSelect'), programDate:document.getElementById('programDate'), programApplyMode:document.getElementById('programApplyMode'), programSummary:document.getElementById('programSummary'), applyProgram:document.getElementById('applyProgram'), saveProgramFromDay:document.getElementById('saveProgramFromDay'), replaceProgramWithCurrent:document.getElementById('replaceProgramWithCurrent'), deleteProgram:document.getElementById('deleteProgram'), exportProgram:document.getElementById('exportProgram'), programCsvFile:document.getElementById('programCsvFile'), importProgramCsv:document.getElementById('importProgramCsv'),
     settingsModal:document.getElementById('settingsModal'), uiScale:document.getElementById('uiScale'), uiScaleValue:document.getElementById('uiScaleValue'), appearanceSelect:document.getElementById('appearanceSelect'), defaultDayEnd:document.getElementById('defaultDayEnd'), themeSelect:document.getElementById('themeSelect'), taskTimeSize:document.getElementById('taskTimeSize'), taskTimeSizeValue:document.getElementById('taskTimeSizeValue'), settingsClose:document.getElementById('settingsClose'), resetSettings:document.getElementById('resetSettings'),
@@ -793,6 +796,16 @@
     const m=/^(\d{2}):(\d{2})$/.exec(timeStr||''); if(!m)return null;
     const h=Number(m[1]),mi=Number(m[2]); const ref=new Date(referenceStartMs); const end=new Date(ref.getFullYear(),ref.getMonth(),ref.getDate(),h,mi,0,0);
     if(end.getTime()<=referenceStartMs)end.setDate(end.getDate()+1); return end.getTime();
+  }
+  /** Resolve a clock time on/after the reference calendar day (for planning future windows). */
+  function resolveDayStart(referenceMs,timeStr){
+    const m=/^(\d{2}):(\d{2})$/.exec(timeStr||''); if(!m)return null;
+    const h=Number(m[1]),mi=Number(m[2]);
+    const ref=new Date(referenceMs);
+    const start=new Date(ref.getFullYear(),ref.getMonth(),ref.getDate(),h,mi,0,0);
+    // If the chosen start is more than ~12h in the past, treat as next day (late-night planning for morning)
+    if(start.getTime() < referenceMs - 12*60*60000) start.setDate(start.getDate()+1);
+    return start.getTime();
   }
 
   // ----------------------------
@@ -1243,23 +1256,27 @@
     const nowMs=now();
     const tasks=normalizeTasks(loadTasks(activeProfileId));
     // All pending top-level tasks in current order
-    const top=tasks.filter(t=>!t.parentId && t.status==='pending')
+    // Skip leftover continuation tasks from previous Smart Delay runs (regenerated below)
+    const top=tasks.filter(t=>!t.parentId && t.status==='pending' && !/\(ادامه\)\s*$/.test(String(t.title||'')))
                    .sort((a,b)=>taskFirstStart(a)-taskFirstStart(b));
     if(!top.length) throw new Error('No pending tasks found');
 
-    const dayEndMs=resolveDayEnd(nowMs, els.dayEnd.value||loadSettings().defaultDayEnd||DEFAULT_DAY_END);
-    if(!dayEndMs || dayEndMs<=nowMs) throw new Error('Invalid “Day ends at” (must be after now)');
+    // Plan window: optional Day starts at (empty = now), required Day ends at
+    const startStr=(els.dayStart && els.dayStart.value) ? els.dayStart.value : '';
+    const planStartMs=startStr ? (resolveDayStart(nowMs, startStr)||nowMs) : nowMs;
+    const dayEndMs=resolveDayEnd(planStartMs, els.dayEnd.value||loadSettings().defaultDayEnd||DEFAULT_DAY_END);
+    if(!dayEndMs || dayEndMs<=planStartMs) throw new Error('بازه نامعتبر: Day starts باید قبل از Day ends باشد');
 
-    // Time-locked tasks = fixed obstacles
+    // Time-locked tasks = fixed obstacles inside the plan window
     const timeLockIntervals=[];
     for(const t of top){
       if(t.lockTime){
         for(const s of getSegments(t)){
-          if(s.end>nowMs && s.start<dayEndMs) timeLockIntervals.push({start:s.start,end:s.end});
+          if(s.end>planStartMs && s.start<dayEndMs) timeLockIntervals.push({start:s.start,end:s.end});
         }
       }
     }
-    const freeIntervals=buildFreeIntervals(nowMs, dayEndMs, timeLockIntervals);
+    const freeIntervals=buildFreeIntervals(planStartMs, dayEndMs, timeLockIntervals);
     let freeMs=totalIntervalDuration(freeIntervals);
 
     // Duration-locked tasks keep their current duration (reserved from free pool)
@@ -1303,7 +1320,7 @@
     }
     // Time-locked keep original segments (not in targetMsById for reallocation)
 
-    // Cap 📖 / 💤 parts by max settings; overflow becomes continuation tasks
+    // Cap 📖 / 💤 parts by max settings; overflow becomes continuation chunk(s) ≤ max each
     persistMaxPartDefaults();
     const maxStudyMs=Math.max(0,Number(els.maxStudyPart?.value)||0)*60000;
     const maxRestMs=Math.max(0,Number(els.maxRestPart?.value)||0)*60000;
@@ -1313,22 +1330,29 @@
       let maxMs=0;
       if(title.startsWith('📖') && maxStudyMs>0) maxMs=maxStudyMs;
       if(title.startsWith('💤') && maxRestMs>0) maxMs=maxRestMs;
-      if(maxMs>0 && (targetMsById[t.id]||0)>maxMs){
-        const extra=(targetMsById[t.id]||0)-maxMs;
+      let remaining=Math.max(0, Math.round(targetMsById[t.id]||0));
+      if(maxMs>0 && remaining>maxMs){
         targetMsById[t.id]=maxMs;
-        continuations.push({
-          sourceId:t.id,
-          title: (t.title||'').replace(/\s*\(ادامه\)\s*$/,'') + ' (ادامه)',
-          weight:t.weight??5,
-          colorKey:t.colorKey||'',
-          extraMs:extra
-        });
+        remaining-=maxMs;
+        const baseTitle=(t.title||'').replace(/\s*\(ادامه\)\s*$/,'').trim();
+        // One continuation per leftover chunk, each ≤ maxMs (last may be smaller)
+        while(remaining>0){
+          const chunk=Math.min(remaining, maxMs);
+          continuations.push({
+            sourceId:t.id,
+            title: baseTitle + ' (ادامه)',
+            weight:t.weight??5,
+            colorKey:t.colorKey||'',
+            extraMs:chunk
+          });
+          remaining-=chunk;
+        }
       }
     }
 
     // Place flexible + duration-locked into free intervals (order preserved)
     // Time-locked stay put.
-    const state={idx:0, cursor: freeIntervals[0]?.start ?? nowMs};
+    const state={idx:0, cursor: freeIntervals[0]?.start ?? planStartMs};
     const newSegmentsById={};
     let overflow=0;
     const rows=[];
@@ -1372,10 +1396,11 @@
     }
 
     return {
-      createdAt:Date.now(), nowMs, dayEndMs,
+      createdAt:Date.now(), nowMs:planStartMs, actualNowMs:nowMs, dayEndMs,
       freeFuture:freeMs, reservedMs, distributable,
       locks:mergedIntervals(timeLockIntervals), freeIntervals,
-      newSegmentsById, overflow, rows, continuationSpecs
+      newSegmentsById, overflow, rows, continuationSpecs,
+      removeContinuationTitles:true
     };
   }
 
@@ -1383,7 +1408,7 @@
     pendingSmartPlan=plan;
     els.smartPreviewStats.innerHTML='';
     const stats=[
-      ['Now', fmtTime(plan.nowMs)],
+      ['Plan starts', fmtTime(plan.nowMs)],
       ['Day ends at', fmtTime(plan.dayEndMs)],
       ['Free time', fmtDuration(plan.freeFuture)],
       ['Reserved (duration locks)', fmtDuration(plan.reservedMs)],
@@ -1435,16 +1460,21 @@
         if(t.isBox) tasks.filter(x=>x.parentId===t.id).forEach(ch=>{ch.status='done';ch.segments=[];ch.start=ch.end=plan.nowMs});
       }
     }
-    // Create continuation tasks from overflow parts
+    // Drop previous auto-continuations, then create fresh ones from this plan
+    if(plan.removeContinuationTitles){
+      tasks=tasks.filter(t=>!(!t.parentId && /\(ادامه\)\s*$/.test(String(t.title||''))));
+    }
     if(Array.isArray(plan.continuationSpecs)){
       for(const c of plan.continuationSpecs){
         if(!c.segments||!c.segments.length) continue;
         const s=c.segments[0].start, e=c.segments[c.segments.length-1].end;
+        const dur=totalIntervalDuration(c.segments);
+        if(dur<=0) continue;
         tasks.push({
           id:uid(), title:c.title, start:s, end:e, segments:c.segments.map(x=>({start:x.start,end:x.end})),
           pinned:false, lockTime:false, lockDuration:false, isBox:false, parentId:null,
           weight:clamp(Number(c.weight)||5,0,10), priority:Math.max(10,Math.round((Number(c.weight)||5)*50)),
-          status:'pending', originalDurationMs:totalIntervalDuration(c.segments),
+          status:'pending', originalDurationMs:dur,
           colorKey:c.colorKey||''
         });
       }
@@ -1660,7 +1690,6 @@
   const nowMs=now();els.start.value=toInputLocal(nowMs);els.end.value=toInputLocal(nowMs+30*60000);const today=dateKey(nowMs);els.noteDate.value=today;els.programDate.value=today;const _s=loadSettings();els.dayEnd.value=_s.defaultDayEnd||DEFAULT_DAY_END;if(els.maxStudyPart)els.maxStudyPart.value=String(_s.maxStudyPart||0);if(els.maxRestPart)els.maxRestPart.value=String(_s.maxRestPart||0);scheduleNotifications();
 
   window.__timeline={
-    loadTasks:()=>normalizeTasks(loadTasks(activeProfileId)),
     saveTasks:(tasks)=>saveTasks(activeProfileId,tasks),
     loadPrograms:()=>loadPrograms(activeProfileId),
     buildSmartDelayPlan,
