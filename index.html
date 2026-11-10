@@ -251,7 +251,10 @@
     <button type="button" data-panel="todoPanel">📝 TO-DO</button>
     <button type="button" data-panel="programsPanelModal">📦 برنامه‌های آماده</button>
     <button type="button" data-panel="delayPanel">⏱ Delay Control</button>
+    <button type="button" data-panel="autoPlanPanel">🎯 برنامه‌ریزی خودکار</button>
     <button type="button" id="settingsBtn">⚙ تنظیمات ظاهر</button>
+    <button type="button" id="menuUndo" disabled>↩ Undo</button>
+    <button type="button" id="menuRedo" disabled>↪ Redo</button>
     <button type="button" id="menuClearAllTasks" style="color:var(--danger)">🗑️ حذف همه تسک‌ها</button>
   </div>
 </div>
@@ -332,6 +335,7 @@
       <button id="applyProgram">Apply to day</button>
       <button id="saveProgramFromDay" class="secondary">Save this day as program</button>
       <button id="replaceProgramWithCurrent" class="warning">Replace selected with current tasks</button>
+      <button id="copyProgramToProfile" class="secondary">کپی به پروفایل دیگر</button>
       <button id="renameProgram" class="ghost">Rename program</button>
       <button id="deleteProgram" class="danger">Delete program</button>
       <button id="exportProgram" class="ghost">Export selected CSV</button>
@@ -350,7 +354,7 @@
 <!-- Add task panel -->
 <div id="addTaskPanel" class="modal-overlay panel-modal" style="display:none">
   <div class="modal">
-    <h2>افزودن تسک</h2>
+    <h2 data-i18n="addTask">افزودن تسک</h2>
     <div class="form-grid">
       <label class="field">Title <input id="title" placeholder="Study for math..." /></label>
       <label class="field">Start <input id="start" type="datetime-local" /></label>
@@ -366,6 +370,17 @@
       <div class="full row" style="justify-content:flex-end;flex-wrap:wrap">
         <button id="clearAll" class="ghost">Clear all</button>
         <button id="addBtn">Add task</button>
+      </div>
+    </div>
+    <hr style="margin:14px 0;border:none;border-top:1px solid var(--border)" />
+    <h3 style="margin:0 0 8px;font-size:15px" data-i18n="quickAdd">افزودن سریع (مدت + ترتیب)</h3>
+    <div class="form-grid">
+      <label class="field">Title <input id="quickTitle" placeholder="📖 Study..." /></label>
+      <label class="field">Weight (0–10) <input id="quickWeight" type="number" min="0" max="10" step="1" value="5" /></label>
+      <label class="field">مدت (دقیقه) <input id="quickDuration" type="number" min="1" step="1" placeholder="20" /></label>
+      <label class="field">شماره ترتیب <input id="quickOrder" type="number" min="1" step="1" placeholder="خالی = آخر" /></label>
+      <div class="full row" style="justify-content:flex-end">
+        <button id="quickAddBtn" class="secondary">افزودن با مدت</button>
       </div>
     </div>
     <div style="display:flex;justify-content:flex-end;margin-top:12px">
@@ -413,6 +428,42 @@
 </div>
 
 
+
+<!-- Auto Plan panel -->
+<div id="autoPlanPanel" class="modal-overlay panel-modal" style="display:none">
+  <div class="modal">
+    <h2 data-i18n="autoPlan">برنامه‌ریزی خودکار</h2>
+    <div class="form-grid">
+      <label class="field">مدت تمرکز (دقیقه)
+        <input id="apFocusMin" type="number" min="1" step="1" value="25" />
+      </label>
+      <label class="field">مدت استراحت (دقیقه)
+        <input id="apRestMin" type="number" min="0" step="1" value="5" />
+      </label>
+      <label class="field">تعداد پارت تمرکز
+        <input id="apFocusCount" type="number" min="1" step="1" value="4" />
+      </label>
+      <label class="field">وزن تمرکز (0–10)
+        <input id="apFocusWeight" type="number" min="0" max="10" step="1" value="9" />
+      </label>
+      <label class="field">وزن استراحت (0–10)
+        <input id="apRestWeight" type="number" min="0" max="10" step="1" value="5" />
+      </label>
+      <label class="field">شروع از
+        <select id="apStartMode">
+          <option value="now">الان</option>
+          <option value="dayStart">Day starts at / الان</option>
+          <option value="afterLast">بعد از آخرین تسک</option>
+        </select>
+      </label>
+    </div>
+    <div class="small muted" style="margin-top:8px">📖 تمرکز و 💤 استراحت — رنگ استراحت سبز روشن</div>
+    <div class="row" style="justify-content:flex-end;margin-top:12px;gap:8px;flex-wrap:wrap">
+      <button type="button" class="ghost panel-close" data-close="autoPlanPanel">بستن</button>
+      <button id="apGenerate" class="secondary">ساخت برنامه</button>
+    </div>
+  </div>
+</div>
 <div id="swapModal" style="display:none" class="modal-overlay">
   <div class="modal">
     <div style="font-weight:800;font-size:17px;margin-bottom:8px">نحوهٔ جابه‌جایی</div>
@@ -503,6 +554,12 @@
           <span id="taskTimeSizeValue" class="badge">13px</span>
         </div>
       </label>
+      <label class="field">Language / زبان
+        <select id="langSelect">
+          <option value="fa">فارسی</option>
+          <option value="en">English</option>
+        </select>
+      </label>
     </div>
     <div class="theme-preview" aria-label="Theme choices">
       <button class="theme-dot" data-theme-choice="ocean" title="Ocean"></button>
@@ -534,6 +591,40 @@
 <script>
 (function(){
   // Change this constant if you want to change the factory default day end in code.
+
+  // ----------------------------
+  // i18n
+  // ----------------------------
+  const I18N = {
+    fa: {
+      saved:'ذخیره شد', undone:'برگشت', redone:'انجام دوباره', nothingToUndo:'چیزی برای Undo نیست', nothingToRedo:'چیزی برای Redo نیست',
+      smartApplied:'Smart Delay اعمال شد', addTask:'افزودن تسک', quickAdd:'افزودن سریع (مدت + ترتیب)',
+      autoPlan:'برنامه‌ریزی خودکار', subtitle:'لیست تسک‌های امروز', settings:'تنظیمات ظاهر',
+      focusPart:'تمرکز', restPart:'استراحت', generated:'برنامه ساخته شد',
+      copyProgram:'کپی شد', pickProfile:'پروفایل مقصد را انتخاب کن', pickProgram:'برنامه را انتخاب کن',
+      clearOrAppend:'تسک‌های فعلی پاک شوند؟\nOK = پاک کردن و ساخت از نو\nCancel = اضافه به لیست فعلی'
+    },
+    en: {
+      saved:'Saved', undone:'Undone', redone:'Redone', nothingToUndo:'Nothing to undo', nothingToRedo:'Nothing to redo',
+      smartApplied:'Smart Delay applied', addTask:'Add task', quickAdd:'Quick add (duration + order)',
+      autoPlan:'Auto plan', subtitle:"Today's tasks", settings:'Appearance settings',
+      focusPart:'Focus', restPart:'Break', generated:'Plan generated',
+      copyProgram:'Program copied', pickProfile:'Choose target profile', pickProgram:'Choose a program',
+      clearOrAppend:'Clear existing tasks?\nOK = clear and rebuild\nCancel = append to current list'
+    }
+  };
+  let currentLang = 'fa';
+  function t(key){ const pack=I18N[currentLang]||I18N.fa; return (pack && pack[key]) || (I18N.en[key]) || key; }
+  function applyLanguage(){
+    document.querySelectorAll('[data-i18n]').forEach(el=>{
+      const k=el.getAttribute('data-i18n'); if(k) el.textContent=t(k);
+    });
+    const sub=document.getElementById('headerSubtitle');
+    if(sub) sub.textContent=t('subtitle');
+    document.documentElement.lang = currentLang==='fa'?'fa':'en';
+    document.documentElement.dir = currentLang==='fa'?'rtl':'ltr';
+  }
+
   const DEFAULT_DAY_END = '01:00';
   const DEFAULT_UI_SCALE = 90;
   const BASE_KEY = 'timeline_scheduler_v2_profiles';
@@ -559,12 +650,50 @@
   function keyForProfile(pid){ return `${BASE_KEY}::${pid}::tasks` }
   function notesKeyForProfile(pid){ return `${BASE_KEY}::${pid}::notes` }
   function programsKeyForProfile(pid){ return `${BASE_KEY}::${pid}::programs` }
-  function undoKeyForProfile(pid){ return `${BASE_KEY}::${pid}::smart_undo` }
+  function undoKeyForProfile(pid){ return `${BASE_KEY}::${pid}::history_undo` }
+  function redoKeyForProfile(pid){ return `${BASE_KEY}::${pid}::history_redo` }
   function loadTasks(pid){ try{return JSON.parse(localStorage.getItem(keyForProfile(pid))||'[]')}catch(e){return[]} }
   function loadNotes(pid){ try{return JSON.parse(localStorage.getItem(notesKeyForProfile(pid))||'[]')}catch(e){return[]} }
   function loadPrograms(pid){ try{return JSON.parse(localStorage.getItem(programsKeyForProfile(pid))||'[]')}catch(e){return[]} }
   function loadUndoStack(pid){ try{return JSON.parse(localStorage.getItem(undoKeyForProfile(pid))||'[]')}catch(e){return[]} }
-  function saveUndoStack(pid,stack){ localStorage.setItem(undoKeyForProfile(pid),JSON.stringify(stack.slice(-MAX_UNDO))); updateUndoButton() }
+  function saveUndoStack(pid,stack){ localStorage.setItem(undoKeyForProfile(pid),JSON.stringify((stack||[]).slice(-MAX_UNDO))); updateUndoButton() }
+  function loadRedoStack(pid){ try{return JSON.parse(localStorage.getItem(redoKeyForProfile(pid))||'[]')}catch(e){return[]} }
+  function saveRedoStack(pid,stack){ localStorage.setItem(redoKeyForProfile(pid),JSON.stringify((stack||[]).slice(-MAX_UNDO))); updateUndoButton() }
+  function pushHistory(label){
+    if(!activeProfileId) return;
+    const stack=loadUndoStack(activeProfileId);
+    stack.push({label:label||'edit', at:Date.now(), tasks:deepClone(loadTasks(activeProfileId))});
+    saveUndoStack(activeProfileId, stack);
+    saveRedoStack(activeProfileId, []); // clear redo on new action
+  }
+  function undoLast(){
+    if(!activeProfileId) return;
+    const stack=loadUndoStack(activeProfileId);
+    if(!stack.length){ showToast(t('nothingToUndo')); return; }
+    const cur=deepClone(loadTasks(activeProfileId));
+    const prev=stack.pop();
+    saveUndoStack(activeProfileId, stack);
+    const redo=loadRedoStack(activeProfileId);
+    redo.push({label:prev.label, at:Date.now(), tasks:cur});
+    saveRedoStack(activeProfileId, redo);
+    localStorage.setItem(keyForProfile(activeProfileId), JSON.stringify(prev.tasks||[]));
+    render(); scheduleNotifications();
+    showToast((t('undone')||'Undo') + (prev.label?': '+prev.label:''));
+  }
+  function redoLast(){
+    if(!activeProfileId) return;
+    const redo=loadRedoStack(activeProfileId);
+    if(!redo.length){ showToast(t('nothingToRedo')); return; }
+    const cur=deepClone(loadTasks(activeProfileId));
+    const next=redo.pop();
+    saveRedoStack(activeProfileId, redo);
+    const stack=loadUndoStack(activeProfileId);
+    stack.push({label:next.label, at:Date.now(), tasks:cur});
+    saveUndoStack(activeProfileId, stack);
+    localStorage.setItem(keyForProfile(activeProfileId), JSON.stringify(next.tasks||[]));
+    render(); scheduleNotifications();
+    showToast((t('redone')||'Redo') + (next.label?': '+next.label:''));
+  }
 
   function normalizeTask(t){
     if(!t.status) t.status='pending';
@@ -594,11 +723,18 @@
     return t;
   }
   function normalizeTasks(tasks){ return (tasks||[]).map(normalizeTask) }
-  function saveTasks(pid,tasks,{toast=true}={}){
+  function saveTasks(pid,tasks,{toast=true, history=true, historyLabel='edit'}={}){
+    if(history && pid){
+      // push current state BEFORE overwrite
+      const stack=loadUndoStack(pid);
+      stack.push({label:historyLabel||'edit', at:Date.now(), tasks:deepClone(loadTasks(pid))});
+      saveUndoStack(pid, stack);
+      saveRedoStack(pid, []);
+    }
     tasks=normalizeTasks(tasks);
     localStorage.setItem(keyForProfile(pid),JSON.stringify(tasks));
     render();
-    if(toast) showToast('Saved');
+    if(toast) showToast(t('saved')||'Saved');
     scheduleNotifications();
   }
   function saveNotes(pid,notes){ localStorage.setItem(notesKeyForProfile(pid),JSON.stringify(notes)); renderNotes(); showToast('Notes saved') }
@@ -618,7 +754,7 @@
   // ----------------------------
   // Settings / themes / scale
   // ----------------------------
-  function defaultSettings(){ return {scale:DEFAULT_UI_SCALE,appearance:'system',theme:'ocean',defaultDayEnd:DEFAULT_DAY_END,taskTimeSize:13,maxStudyPart:0,maxRestPart:0} }
+  function defaultSettings(){ return {scale:DEFAULT_UI_SCALE,appearance:'system',theme:'ocean',defaultDayEnd:DEFAULT_DAY_END,taskTimeSize:13,maxStudyPart:0,maxRestPart:0,lang:'fa'} }
   function loadSettings(){
     let s={}; try{s=JSON.parse(localStorage.getItem(SETTINGS_KEY)||'{}')}catch(e){}
     return Object.assign(defaultSettings(),s);
@@ -639,6 +775,9 @@
     if(els.taskTimeSize){ els.taskTimeSize.value=timeSize; els.taskTimeSizeValue.textContent=timeSize+'px'; }
     if(els.maxStudyPart) els.maxStudyPart.value=String(Number.isFinite(Number(s.maxStudyPart))?Number(s.maxStudyPart):0);
     if(els.maxRestPart) els.maxRestPart.value=String(Number.isFinite(Number(s.maxRestPart))?Number(s.maxRestPart):0);
+    currentLang = (s.lang==='en')?'en':'fa';
+    const ls=document.getElementById('langSelect'); if(ls) ls.value=currentLang;
+    applyLanguage();
     document.querySelectorAll('.theme-dot').forEach(b=>b.classList.toggle('active',b.dataset.themeChoice===(s.theme||'ocean')));
     if(els.dayEnd && !els.dayEnd.value) els.dayEnd.value=s.defaultDayEnd||DEFAULT_DAY_END;
     const accent=getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
@@ -654,6 +793,8 @@
     s.taskTimeSize=Number(els.taskTimeSize?.value)||13;
     s.maxStudyPart=Math.max(0,Number(els.maxStudyPart?.value)||0);
     s.maxRestPart=Math.max(0,Number(els.maxRestPart?.value)||0);
+    const ls=document.getElementById('langSelect');
+    if(ls) s.lang=ls.value==='en'?'en':'fa';
     saveSettings(s);
   }
   function persistDayEndAsDefault(){
@@ -1106,7 +1247,7 @@
         tasks.push(newTask);
       }
     }
-    saveTasks(activeProfileId,tasks);
+    saveTasks(activeProfileId,tasks,{historyLabel:'add task'});
     // Next task defaults: start = end of just-added task, end = start + same duration (min 30m)
     const justDur=Math.max(30*60000, e-s);
     const nextStart=e;
@@ -1118,6 +1259,49 @@
     els.newTaskWeight.value='5';
     try{ closePanel('addTaskPanel'); }catch(e){}
   }
+
+  function addTaskByDuration(){
+    if(!activeProfileId){alert('No active profile');return}
+    const title=(document.getElementById('quickTitle')?.value||'').trim();
+    const mins=Math.max(1, Number(document.getElementById('quickDuration')?.value)||0);
+    const orderRaw=document.getElementById('quickOrder')?.value;
+    const weight=clamp(Number(document.getElementById('quickWeight')?.value)||5,0,10);
+    if(!title){alert('Title required');return}
+    if(!mins){alert('مدت را وارد کن');return}
+    const dur=mins*60000;
+    let tasks=normalizeTasks(loadTasks(activeProfileId));
+    const top=tasks.filter(t=>!t.parentId).sort((a,b)=>taskFirstStart(a)-taskFirstStart(b));
+    let insertIdx=top.length; // default append
+    if(orderRaw!=='' && orderRaw!=null){
+      const ord=Math.round(Number(orderRaw));
+      if(Number.isFinite(ord) && ord>=1) insertIdx=Math.min(top.length, Math.max(0, ord-1));
+    }
+    let startMs;
+    if(insertIdx===0){
+      startMs = top.length ? taskFirstStart(top[0]) : now();
+    } else {
+      startMs = taskLastEnd(top[insertIdx-1]);
+    }
+    const endMs=startMs+dur;
+    const newTask={
+      id:uid(), title, start:startMs, end:endMs, segments:[{start:startMs,end:endMs}],
+      pinned:false, lockTime:false, lockDuration:false, isBox:false, parentId:null,
+      weight, priority:Math.max(10,Math.round(weight*50)), status:'pending', originalDurationMs:dur, colorKey:''
+    };
+    // Shift later unlocked tasks by dur
+    const followingIds=new Set(top.slice(insertIdx).map(t=>t.id));
+    for(const t of tasks){
+      if(t.lockTime) continue;
+      if(followingIds.has(t.id) || (t.parentId && followingIds.has(t.parentId))) shiftTask(t, dur);
+    }
+    tasks.push(newTask);
+    saveTasks(activeProfileId, tasks, {historyLabel:'add duration'});
+    const qt=document.getElementById('quickTitle'); if(qt) qt.value='';
+    const qd=document.getElementById('quickDuration'); if(qd) qd.value='';
+    const qo=document.getElementById('quickOrder'); if(qo) qo.value='';
+    try{ closePanel('addTaskPanel'); }catch(e){}
+  }
+
   function deleteTaskWithOptions(id){
     if(!activeProfileId)return;
     const tasks=normalizeTasks(loadTasks(activeProfileId));
@@ -1143,7 +1327,7 @@
   els.deleteTaskShift.onclick=()=>commitDeleteTask(true);
   els.deleteTaskCancel.onclick=closeDeleteTaskModal;
   els.deleteTaskModal.addEventListener('click',e=>{if(e.target===els.deleteTaskModal)closeDeleteTaskModal()});
-  function deleteAll(){if(!activeProfileId||!confirm('Clear all tasks for this profile?'))return;localStorage.setItem(keyForProfile(activeProfileId),'[]');saveUndoStack(activeProfileId,[]);render();scheduleNotifications()}
+  function deleteAll(){if(!activeProfileId||!confirm('Clear all tasks for this profile?'))return;saveTasks(activeProfileId,[],{historyLabel:'clear all'});}
   function openEditModal(id){
     const tasks=normalizeTasks(loadTasks(activeProfileId)),t=tasks.find(x=>x.id===id);
     if(!t){alert('Task not found');return}
@@ -1231,6 +1415,102 @@
     saveTasks(activeProfileId,tasks,{toast:false});
   }
   function setTaskStatus(id,status){const tasks=normalizeTasks(loadTasks(activeProfileId)),t=tasks.find(x=>x.id===id);if(!t)return;t.status=['pending','done','skipped'].includes(status)?status:'pending';if(t.isBox)tasks.filter(x=>x.parentId===t.id).forEach(ch=>ch.status=t.status);saveTasks(activeProfileId,tasks,{toast:false})}
+
+
+  // ----------------------------
+  // Auto plan (focus / rest cycles)
+  // ----------------------------
+  function generateAutoPlan(){
+    if(!activeProfileId){alert('No active profile');return}
+    const focusMin=Math.max(1, Number(document.getElementById('apFocusMin')?.value)||25);
+    const restMin=Math.max(0, Number(document.getElementById('apRestMin')?.value)||0);
+    const count=Math.max(1, Math.round(Number(document.getElementById('apFocusCount')?.value)||4));
+    const fw=clamp(Number(document.getElementById('apFocusWeight')?.value)||9,0,10);
+    const rw=clamp(Number(document.getElementById('apRestWeight')?.value)||5,0,10);
+    const mode=document.getElementById('apStartMode')?.value||'now';
+    let tasks=normalizeTasks(loadTasks(activeProfileId));
+    const existingTop=tasks.filter(t=>!t.parentId);
+    if(existingTop.length){
+      const clear=confirm(t('clearOrAppend'));
+      if(clear){
+        tasks=tasks.filter(t=>t.parentId); // keep nothing main - clear all main+subs
+        tasks=[];
+      }
+    }
+    let cursor;
+    if(mode==='afterLast'){
+      const top=tasks.filter(t=>!t.parentId).sort((a,b)=>taskFirstStart(a)-taskFirstStart(b));
+      cursor = top.length ? taskLastEnd(top[top.length-1]) : now();
+    } else if(mode==='dayStart'){
+      const startStr=els.dayStart?.value||'';
+      cursor = startStr ? (resolveDayStart(now(), startStr)||now()) : now();
+    } else {
+      cursor = now();
+    }
+    const created=[];
+    for(let i=0;i<count;i++){
+      const fStart=cursor, fEnd=fStart+focusMin*60000;
+      created.push({
+        id:uid(), title:'📖 '+(t('focusPart')||'Focus')+' '+(i+1),
+        start:fStart, end:fEnd, segments:[{start:fStart,end:fEnd}],
+        pinned:false, lockTime:false, lockDuration:false, isBox:false, parentId:null,
+        weight:fw, priority:Math.max(10,Math.round(fw*50)), status:'pending',
+        originalDurationMs:focusMin*60000, colorKey:''
+      });
+      cursor=fEnd;
+      if(restMin>0 && i<count-1){ // rest after each focus except optionally after last - include rest between
+        const rStart=cursor, rEnd=rStart+restMin*60000;
+        created.push({
+          id:uid(), title:'💤 '+(t('restPart')||'Break')+' '+(i+1),
+          start:rStart, end:rEnd, segments:[{start:rStart,end:rEnd}],
+          pinned:false, lockTime:false, lockDuration:false, isBox:false, parentId:null,
+          weight:rw, priority:Math.max(10,Math.round(rw*50)), status:'pending',
+          originalDurationMs:restMin*60000, colorKey:'emerald'
+        });
+        cursor=rEnd;
+      }
+    }
+    // Optional rest after last focus if restMin>0 - user might want it; add after last too
+    if(restMin>0){
+      const rStart=cursor, rEnd=rStart+restMin*60000;
+      created.push({
+        id:uid(), title:'💤 '+(t('restPart')||'Break')+' '+count,
+        start:rStart, end:rEnd, segments:[{start:rStart,end:rEnd}],
+        pinned:false, lockTime:false, lockDuration:false, isBox:false, parentId:null,
+        weight:rw, priority:Math.max(10,Math.round(rw*50)), status:'pending',
+        originalDurationMs:restMin*60000, colorKey:'emerald'
+      });
+    }
+    tasks=tasks.concat(created);
+    saveTasks(activeProfileId, tasks, {historyLabel:'auto plan'});
+    try{ closePanel('autoPlanPanel'); }catch(e){}
+    showToast(t('generated'));
+  }
+
+  function copyProgramToOtherProfile(){
+    if(!activeProfileId)return;
+    const id=els.programSelect?.value;
+    if(!id){alert(t('pickProgram'));return}
+    const prog=loadPrograms(activeProfileId).find(p=>p.id===id);
+    if(!prog){alert(t('pickProgram'));return}
+    const others=profiles.filter(p=>p.id!==activeProfileId);
+    if(!others.length){alert('No other profile');return}
+    const names=others.map((p,i)=>`${i+1}) ${p.name}`).join('\\n');
+    const choice=prompt((t('pickProfile')||'Target profile')+':\\n'+names, '1');
+    if(!choice)return;
+    const idx=Math.round(Number(choice))-1;
+    const target=others[idx] || others.find(p=>p.name===choice.trim());
+    if(!target){alert(t('pickProfile'));return}
+    const dest=loadPrograms(target.id);
+    const copy={...deepClone(prog), id:uid(), name:prog.name, createdAt:Date.now()};
+    // unique name
+    let n=copy.name, c=2;
+    while(dest.some(p=>p.name.toLowerCase()===n.toLowerCase())){ n=copy.name+' ('+c+')'; c++; }
+    copy.name=n;
+    dest.push(copy);
+    savePrograms(target.id, dest, true);
+    showToast(t('copyProgram')+': '+target.name);
+  }
 
   // ----------------------------
   // Delay (simple shift all tasks)
@@ -1439,9 +1719,6 @@
   function applySmartPlan(plan){
     if(!plan)return;
     let tasks=normalizeTasks(loadTasks(activeProfileId));
-    const stack=loadUndoStack(activeProfileId);
-    stack.push({createdAt:Date.now(), tasks:deepClone(tasks)});
-    saveUndoStack(activeProfileId,stack);
 
     for(const row of plan.rows){
       const t=tasks.find(x=>x.id===row.id);if(!t)continue;
@@ -1480,23 +1757,20 @@
       }
     }
     persistDayEndAsDefault();
-    saveTasks(activeProfileId,tasks,{toast:false});
+    saveTasks(activeProfileId,tasks,{toast:false, history:true, historyLabel:'Smart Delay'});
     els.smartPreviewModal.style.display='none';
     pendingSmartPlan=null;
-    showToast('Smart Delay applied');
+    showToast(t('smartApplied')||'Smart Delay applied');
   }
 
-  function undoSmartDelay(){
-    const stack=loadUndoStack(activeProfileId);
-    if(!stack.length){showToast('Nothing to undo');return}
-    const snap=stack.pop();
-    saveUndoStack(activeProfileId,stack);
-    saveTasks(activeProfileId,snap.tasks,{toast:false});
-    showToast('Smart delay undone');
-  }
+  function undoSmartDelay(){ undoLast(); }
   function updateUndoButton(){
-    if(!els.undoSmartDelay)return;
-    els.undoSmartDelay.disabled=!activeProfileId||loadUndoStack(activeProfileId).length===0;
+    const u=!activeProfileId||loadUndoStack(activeProfileId).length===0;
+    const r=!activeProfileId||loadRedoStack(activeProfileId).length===0;
+    if(els.undoSmartDelay) els.undoSmartDelay.disabled=u;
+    const mu=document.getElementById('menuUndo'), mr=document.getElementById('menuRedo');
+    if(mu) mu.disabled=u;
+    if(mr) mr.disabled=r;
   }
 
   // Event wiring for delay controls
@@ -1510,6 +1784,18 @@
   els.smartPreviewApply.onclick=()=>applySmartPlan(pendingSmartPlan);
   els.undoSmartDelay.onclick=undoSmartDelay;
   if(els.enableNotifications) els.enableNotifications.onclick=requestNotificationsAndReschedule;
+  const menuUndo=document.getElementById('menuUndo');
+  const menuRedo=document.getElementById('menuRedo');
+  if(menuUndo) menuUndo.onclick=()=>{ closeMainMenu(); undoLast(); };
+  if(menuRedo) menuRedo.onclick=()=>{ closeMainMenu(); redoLast(); };
+  const quickAddBtn=document.getElementById('quickAddBtn');
+  if(quickAddBtn) quickAddBtn.onclick=addTaskByDuration;
+  const apGen=document.getElementById('apGenerate');
+  if(apGen) apGen.onclick=generateAutoPlan;
+  const copyProg=document.getElementById('copyProgramToProfile');
+  if(copyProg) copyProg.onclick=copyProgramToOtherProfile;
+  const langSel=document.getElementById('langSelect');
+  if(langSel) langSel.addEventListener('change',()=>{ updateSettingsFromControls(); });
 
   // ----------------------------
   // Notes & notifications
@@ -1687,9 +1973,10 @@
 
   applySettings(loadSettings());
   ensureProfiles();
-  const nowMs=now();els.start.value=toInputLocal(nowMs);els.end.value=toInputLocal(nowMs+30*60000);const today=dateKey(nowMs);els.noteDate.value=today;els.programDate.value=today;const _s=loadSettings();els.dayEnd.value=_s.defaultDayEnd||DEFAULT_DAY_END;if(els.maxStudyPart)els.maxStudyPart.value=String(_s.maxStudyPart||0);if(els.maxRestPart)els.maxRestPart.value=String(_s.maxRestPart||0);scheduleNotifications();
+  const nowMs=now();els.start.value=toInputLocal(nowMs);els.end.value=toInputLocal(nowMs+30*60000);const today=dateKey(nowMs);els.noteDate.value=today;els.programDate.value=today;const _s=loadSettings();applySettings(_s);els.dayEnd.value=_s.defaultDayEnd||DEFAULT_DAY_END;if(els.maxStudyPart)els.maxStudyPart.value=String(_s.maxStudyPart||0);if(els.maxRestPart)els.maxRestPart.value=String(_s.maxRestPart||0);scheduleNotifications();
 
   window.__timeline={
+    loadTasks:()=>normalizeTasks(loadTasks(activeProfileId)),
     saveTasks:(tasks)=>saveTasks(activeProfileId,tasks),
     loadPrograms:()=>loadPrograms(activeProfileId),
     buildSmartDelayPlan,
